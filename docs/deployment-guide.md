@@ -268,6 +268,98 @@ All changes after initial bootstrap go through git → push to Gitea → Argo CD
 5. Add the hostname to `/etc/hosts` on your machine
 6. Commit and push — Argo CD handles the rest
 
+## Backups
+
+Automated backups run as Kubernetes CronJobs and write to a Synology NAS (`192.168.1.246:/volume1/k8s-backups`) via NFS.
+
+### What's backed up
+
+| Data | Schedule | Retention | NAS path |
+|---|---|---|---|
+| Gitea (repos, DB, config) | Daily at 3am | 30 days | `/volume1/k8s-backups/gitea/` |
+| Step CA (keys, certs, config) | Weekly Sunday 3am | 90 days | `/volume1/k8s-backups/step-ca/<timestamp>/` |
+
+Argo CD and other services are stateless — their state is in git (this repo) and Kubernetes CRDs, both of which are reconstructed from the repo on redeploy.
+
+### Prerequisites
+
+Enable NFS on the Synology:
+1. DSM → Control Panel → File Services → NFS → Enable NFS
+2. Create shared folder `k8s-backups`
+3. NFS Permissions: allow `192.168.1.0/24`, squash all users to admin
+
+Install NFS client on the k3s server node:
+
+```bash
+# Fedora
+sudo dnf install nfs-utils
+
+# Ubuntu
+sudo apt install nfs-common
+```
+
+### Manual backup
+
+Trigger a backup immediately:
+
+```bash
+# Gitea
+kubectl create job --from=cronjob/gitea-backup gitea-backup-manual -n gitea
+kubectl logs -f job/gitea-backup-manual -n gitea
+
+# Step CA
+kubectl create job --from=cronjob/step-ca-backup step-ca-backup-manual -n step-ca
+kubectl logs -f job/step-ca-backup-manual -n step-ca
+```
+
+### Manual backup (Step CA — from local machine)
+
+The `scripts/backup-step-ca.sh` script extracts Step CA keys and config from the running pod to a local directory. Use this for an initial backup or before major changes:
+
+```bash
+./scripts/backup-step-ca.sh
+```
+
+Output goes to `backups/step-ca/<timestamp>/` (git-ignored). Store the `secrets/` subdirectory somewhere secure (encrypted USB, password manager).
+
+### Restoring Gitea
+
+```bash
+# Scale down Gitea
+kubectl scale deployment gitea -n gitea --replicas=0
+
+# Copy the backup from the NAS and extract
+# (adjust the filename to the backup you want to restore)
+scp nas:/volume1/k8s-backups/gitea/gitea-backup-XXXXXXXX-XXXXXX.tar.gz .
+tar xzf gitea-backup-*.tar.gz
+
+# Restore the database and repos into the PVC
+# (details depend on what's in the dump — see Gitea docs)
+kubectl scale deployment gitea -n gitea --replicas=1
+```
+
+### Restoring Step CA
+
+Use the restore script to recreate Kubernetes Secrets from a backup:
+
+```bash
+./scripts/restore-step-ca.sh backups/step-ca/<timestamp>
+# Or from the NAS copy:
+./scripts/restore-step-ca.sh /mnt/nas-backup/step-ca/<timestamp>
+
+kubectl rollout restart deployment step-ca -n step-ca
+```
+
+### Disaster recovery (full cluster rebuild)
+
+1. Install k3s (step 1 of this guide)
+2. Install Argo CD (step 2)
+3. Restore Step CA secrets: `./scripts/restore-step-ca.sh <backup-dir>`
+4. Deploy Gitea, restore from NAS backup
+5. Push this repo to Gitea
+6. Register repo in Argo CD and apply root app (step 6)
+7. Complete steps 7–12
+
 ## Environment-specific values
 
 These values are specific to each deployment and must be updated:
@@ -277,6 +369,7 @@ These values are specific to each deployment and must be updated:
 | Step CA root cert (caBundle) | `workloads/cluster-issuer/cluster-issuer.yaml` | `kubectl exec -n step-ca deploy/step-ca -- cat /home/step/certs/root_ca.crt \| base64 -w0` |
 | Ingress ClusterIP | `workloads/coredns-custom/configmap.yaml` | `kubectl get svc ingress-nginx-controller -n ingress-nginx -o jsonpath='{.spec.clusterIP}'` |
 | Host LAN IP | `/etc/hosts`, systemd-resolved config | `hostname -I \| awk '{print $1}'` |
+| NAS IP | `workloads/backups/gitea-backup.yaml`, `step-ca-backup.yaml` | NFS server address for backup storage |
 
 ## Adding worker nodes
 
