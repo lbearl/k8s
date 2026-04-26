@@ -118,9 +118,11 @@ metadata:
   namespace: step-ca
   annotations:
     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - step-ca.home.bearl.me
   rules:
     - host: step-ca.home.bearl.me
       http:
