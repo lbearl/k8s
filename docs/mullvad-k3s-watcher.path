@@ -1,0 +1,12 @@
+[Unit]
+Description=Watch for Mullvad tunnel reconnects and re-apply k3s nftables rules
+
+[Path]
+# Mullvad recreates the wg0-mullvad interface on reconnect.
+# PathExists fires when the interface appears in sysfs.
+PathExists=/sys/class/net/wg0-mullvad
+# Re-check periodically in case we miss the event
+PathChanged=/sys/class/net/wg0-mullvad/operstate
+
+[Install]
+WantedBy=multi-user.target

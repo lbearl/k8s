@@ -58,7 +58,33 @@ kubectl run nettest --image=busybox:1.36 --rm -it --restart=Never -- wget -qO /d
 
 ### 4. After Mullvad reconnects
 
-Mullvad recreates its `inet mullvad` table on reconnect, wiping the inserted rules. Re-apply with:
+Mullvad recreates its `inet mullvad` table on reconnect, wiping the inserted rules. A systemd path unit watches for tunnel changes and re-applies them automatically.
+
+Install the watcher:
+
+```bash
+sudo cp docs/mullvad-k3s-watcher.path docs/mullvad-k3s-watcher.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now mullvad-k3s-watcher.path
+```
+
+The watcher monitors `/sys/class/net/wg0-mullvad` — when Mullvad recreates the WireGuard interface, it waits 3 seconds for Mullvad to finish writing its nftables rules, then re-inserts ours.
+
+Verify it's running:
+
+```bash
+systemctl status mullvad-k3s-watcher.path
+```
+
+To test, reconnect Mullvad and check the rules were re-applied:
+
+```bash
+mullvad reconnect
+sleep 5
+sudo nft list chain inet mullvad forward | grep "10.42.0.0/16"
+```
+
+If the watcher fails for any reason, re-apply manually:
 
 ```bash
 sudo systemctl restart mullvad-k3s-exclude.service
