@@ -14,6 +14,9 @@ spec:
       template:
         spec:
           restartPolicy: Never
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
           containers:
             - name: backup
               image: gitea/gitea:1.22
