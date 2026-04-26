@@ -1,0 +1,57 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: gitea-backup
+  namespace: gitea
+spec:
+  schedule: "0 3 * * *"  # Daily at 3am
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: backup
+              image: gitea/gitea:1.22
+              command:
+                - sh
+                - -c
+                - |
+                  set -e
+                  TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+                  BACKUP_DIR="/backups/gitea"
+                  mkdir -p "${BACKUP_DIR}"
+
+                  echo "Starting Gitea backup..."
+                  cd /tmp
+                  gitea dump \
+                    --config /data/gitea/conf/app.ini \
+                    --type tar.gz \
+                    --file "gitea-backup-${TIMESTAMP}.tar.gz"
+
+                  mv "gitea-backup-${TIMESTAMP}.tar.gz" "${BACKUP_DIR}/"
+
+                  # Prune backups older than 30 days
+                  find "${BACKUP_DIR}" -name "gitea-backup-*.tar.gz" -mtime +30 -delete
+
+                  echo "Backup complete: ${BACKUP_DIR}/gitea-backup-${TIMESTAMP}.tar.gz"
+                  ls -lh "${BACKUP_DIR}/"
+              volumeMounts:
+                - name: gitea-data
+                  mountPath: /data
+                  readOnly: true
+                - name: backups
+                  mountPath: /backups
+          volumes:
+            - name: gitea-data
+              persistentVolumeClaim:
+                claimName: gitea-data
+                readOnly: true
+            - name: backups
+              nfs:
+                server: 192.168.1.246
+                path: /volume1/k8s-backups
