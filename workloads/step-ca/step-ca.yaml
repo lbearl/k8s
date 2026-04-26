@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: step-ca
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: step-ca-data
+  namespace: step-ca
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: step-ca
+  namespace: step-ca
+  labels:
+    app: step-ca
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: step-ca
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: step-ca
+    spec:
+      containers:
+        - name: step-ca
+          image: smallstep/step-ca:0.27.2
+          ports:
+            - containerPort: 9000
+              name: https
+          env:
+            - name: DOCKER_STEPCA_INIT_NAME
+              value: "Home Bearl Me CA"
+            - name: DOCKER_STEPCA_INIT_DNS_NAMES
+              value: "step-ca.home.bearl.me,step-ca.step-ca.svc.cluster.local,127.0.0.1"
+            - name: DOCKER_STEPCA_INIT_REMOTE_MANAGEMENT
+              value: "true"
+            - name: DOCKER_STEPCA_INIT_ACME
+              value: "true"
+          volumeMounts:
+            - name: data
+              mountPath: /home/step
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: step-ca-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: step-ca
+  namespace: step-ca
+spec:
+  selector:
+    app: step-ca
+  ports:
+    - name: https
+      port: 9000
+      targetPort: https
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: step-ca
+  namespace: step-ca
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: step-ca.home.bearl.me
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: step-ca
+                port:
+                  number: 9000

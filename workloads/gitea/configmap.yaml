@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitea-config
+  namespace: gitea
+data:
+  app.ini: |
+    APP_NAME = Gitea
+    RUN_MODE = prod
+
+    [server]
+    DOMAIN = gitea.home.bearl.me
+    ROOT_URL = https://gitea.home.bearl.me/
+    HTTP_PORT = 3000
+    SSH_DOMAIN = gitea.home.bearl.me
+    SSH_PORT = 22
+    SSH_LISTEN_PORT = 2222
+
+    [database]
+    DB_TYPE = sqlite3
+    PATH = /data/gitea/gitea.db
+
+    [repository]
+    ROOT = /data/git/repositories
+
+    [security]
+    INSTALL_LOCK = true
+
+    [service]
+    DISABLE_REGISTRATION = false
+    REQUIRE_SIGNIN_VIEW = false
