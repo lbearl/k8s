@@ -16,6 +16,8 @@ spec:
         controller:
           service:
             type: LoadBalancer
+          extraArgs:
+            enable-ssl-passthrough: ""
   destination:
     server: https://kubernetes.default.svc
     namespace: ingress-nginx
