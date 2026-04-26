@@ -1,0 +1,346 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trust-site
+  namespace: trust
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Home Network — Install Trusted Certificate</title>
+      <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+          color: #e2e8f0;
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+        }
+
+        .container {
+          max-width: 640px;
+          width: 100%;
+        }
+
+        .card {
+          background: rgba(30, 41, 59, 0.8);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(148, 163, 184, 0.1);
+          border-radius: 1rem;
+          padding: 2.5rem;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .icon {
+          width: 56px;
+          height: 56px;
+          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          border-radius: 0.875rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 1.5rem;
+        }
+
+        .icon svg { width: 28px; height: 28px; color: white; }
+
+        h1 {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #f1f5f9;
+          margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+          color: #94a3b8;
+          font-size: 0.95rem;
+          line-height: 1.6;
+          margin-bottom: 2rem;
+        }
+
+        .download-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: linear-gradient(135deg, #3b82f6, #2563eb);
+          color: white;
+          text-decoration: none;
+          padding: 0.875rem 1.75rem;
+          border-radius: 0.75rem;
+          font-size: 1rem;
+          font-weight: 600;
+          transition: all 0.2s;
+          box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+          margin-bottom: 2rem;
+        }
+
+        .download-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        }
+
+        .download-btn svg { width: 18px; height: 18px; }
+
+        .divider {
+          border: none;
+          border-top: 1px solid rgba(148, 163, 184, 0.1);
+          margin: 2rem 0;
+        }
+
+        h2 {
+          font-size: 0.8rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: #64748b;
+          margin-bottom: 1rem;
+        }
+
+        .tabs {
+          display: flex;
+          gap: 0.25rem;
+          background: rgba(15, 23, 42, 0.5);
+          border-radius: 0.625rem;
+          padding: 0.25rem;
+          margin-bottom: 1.25rem;
+        }
+
+        .tab {
+          flex: 1;
+          padding: 0.625rem;
+          border: none;
+          background: transparent;
+          color: #94a3b8;
+          font-size: 0.85rem;
+          font-weight: 500;
+          border-radius: 0.5rem;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .tab:hover { color: #cbd5e1; }
+        .tab.active { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+
+        .instructions { display: none; }
+        .instructions.active { display: block; }
+
+        .step {
+          display: flex;
+          gap: 0.875rem;
+          margin-bottom: 1.25rem;
+        }
+
+        .step-num {
+          flex-shrink: 0;
+          width: 24px;
+          height: 24px;
+          background: rgba(59, 130, 246, 0.15);
+          color: #60a5fa;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.75rem;
+          font-weight: 700;
+          margin-top: 0.1rem;
+        }
+
+        .step-text {
+          color: #cbd5e1;
+          font-size: 0.9rem;
+          line-height: 1.6;
+        }
+
+        .step-text code {
+          background: rgba(15, 23, 42, 0.6);
+          padding: 0.15rem 0.4rem;
+          border-radius: 0.3rem;
+          font-size: 0.82rem;
+          color: #93c5fd;
+          font-family: "SF Mono", "Fira Code", monospace;
+        }
+
+        .cmd-block {
+          background: rgba(15, 23, 42, 0.6);
+          border: 1px solid rgba(148, 163, 184, 0.08);
+          border-radius: 0.5rem;
+          padding: 0.75rem 1rem;
+          margin-top: 0.5rem;
+          font-family: "SF Mono", "Fira Code", monospace;
+          font-size: 0.8rem;
+          color: #93c5fd;
+          overflow-x: auto;
+          word-break: break-all;
+        }
+
+        .footer {
+          text-align: center;
+          margin-top: 1.5rem;
+          color: #475569;
+          font-size: 0.8rem;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="card">
+          <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+            </svg>
+          </div>
+
+          <h1>Secure Your Connection</h1>
+          <p class="subtitle">
+            Install our home network's certificate authority so your devices
+            trust local services like Gitea and Argo CD without security warnings.
+            This only takes a minute.
+          </p>
+
+          <a href="/root_ca.crt" download="HomeBearl-RootCA.crt" class="download-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Download Certificate
+          </a>
+
+          <hr class="divider">
+
+          <h2>Installation Instructions</h2>
+
+          <div class="tabs">
+            <button class="tab active" onclick="showTab('iphone')">iPhone / iPad</button>
+            <button class="tab" onclick="showTab('mac')">Mac</button>
+            <button class="tab" onclick="showTab('windows')">Windows</button>
+            <button class="tab" onclick="showTab('android')">Android</button>
+            <button class="tab" onclick="showTab('linux')">Linux</button>
+          </div>
+
+          <div id="iphone" class="instructions active">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-text">Tap <strong>Download Certificate</strong> above. You'll see a prompt saying "This website is trying to download a configuration profile." Tap <strong>Allow</strong>.</div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-text">Open <strong>Settings</strong> → <strong>General</strong> → <strong>VPN & Device Management</strong>. Tap the downloaded profile.</div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-text">Tap <strong>Install</strong>, enter your passcode, then tap <strong>Install</strong> again.</div>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <div class="step-text">Go to <strong>Settings</strong> → <strong>General</strong> → <strong>About</strong> → <strong>Certificate Trust Settings</strong>. Toggle on the <strong>Home Bearl Me CA Root CA</strong> certificate.</div>
+            </div>
+          </div>
+
+          <div id="mac" class="instructions">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-text">Click <strong>Download Certificate</strong> above and open the downloaded file.</div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-text"><strong>Keychain Access</strong> will open. Add the certificate to the <strong>System</strong> keychain.</div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-text">Find the certificate in the list, double-click it, expand <strong>Trust</strong>, and set "When using this certificate" to <strong>Always Trust</strong>.</div>
+            </div>
+          </div>
+
+          <div id="windows" class="instructions">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-text">Click <strong>Download Certificate</strong> above and open the downloaded file.</div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-text">Click <strong>Install Certificate</strong>. Choose <strong>Local Machine</strong>, then click <strong>Next</strong>.</div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-text">Select <strong>"Place all certificates in the following store"</strong>, click <strong>Browse</strong>, choose <strong>Trusted Root Certification Authorities</strong>, then click <strong>Finish</strong>.</div>
+            </div>
+          </div>
+
+          <div id="android" class="instructions">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-text">Tap <strong>Download Certificate</strong> above.</div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-text">Open <strong>Settings</strong> → <strong>Security</strong> → <strong>Encryption & credentials</strong> → <strong>Install a certificate</strong> → <strong>CA certificate</strong>.</div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-text">Select the downloaded file and confirm. You may need to set a screen lock if you haven't already.</div>
+            </div>
+          </div>
+
+          <div id="linux" class="instructions">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-text">Click <strong>Download Certificate</strong> above, then open a terminal and run:</div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-text">
+                <strong>Fedora / RHEL:</strong>
+                <div class="cmd-block">sudo cp ~/Downloads/HomeBearl-RootCA.crt /etc/pki/ca-trust/source/anchors/<br>sudo update-ca-trust</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-text">
+                <strong>Ubuntu / Debian:</strong>
+                <div class="cmd-block">sudo cp ~/Downloads/HomeBearl-RootCA.crt /usr/local/share/ca-certificates/<br>sudo update-ca-certificates</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <div class="step-text"><strong>Firefox</strong> uses its own store: Settings → Privacy & Security → Certificates → View Certificates → Import.</div>
+            </div>
+          </div>
+        </div>
+
+        <p class="footer">home.bearl.me — internal certificate authority</p>
+      </div>
+
+      <script>
+        function showTab(id) {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.instructions').forEach(i => i.classList.remove('active'));
+          document.getElementById(id).classList.add('active');
+          event.target.classList.add('active');
+        }
+      </script>
+    </body>
+    </html>
+  nginx.conf: |
+    server {
+        listen 8080;
+        server_name _;
+        root /usr/share/nginx/html;
+        index index.html;
+
+        location /root_ca.crt {
+            alias /certs/root_ca.crt;
+            default_type application/x-x509-ca-cert;
+            add_header Content-Disposition 'attachment; filename="HomeBearl-RootCA.crt"';
+        }
+
+        location / {
+            try_files $uri $uri/ =404;
+        }
+    }

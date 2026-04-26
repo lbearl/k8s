@@ -12,6 +12,7 @@ data:
             10.43.4.106 gitea.home.bearl.me
             10.43.4.106 argocd.home.bearl.me
             10.43.4.106 step-ca.home.bearl.me
+            10.43.4.106 trust.home.bearl.me
             fallthrough
         }
     }
