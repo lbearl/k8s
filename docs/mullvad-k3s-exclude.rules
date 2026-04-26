@@ -1,26 +1,29 @@
 # Exclude k3s pod and service network traffic from Mullvad VPN tunnel.
+#
+# Mullvad's forward chain (priority 0, policy drop) blocks forwarded traffic
+# that isn't destined for wg0-mullvad or private IP ranges. Pod internet traffic
+# gets forwarded through enp60s0 and is dropped.
+#
+# The fix: insert accept rules into Mullvad's own forward/input/output chains
+# for k3s network CIDRs. This means pod internet traffic bypasses the VPN
+# (goes out the physical interface, not the tunnel).
+#
 # Load with: sudo nft -f /etc/mullvad-k3s-exclude.rules
 # Remove with: sudo nft delete table inet excludeK3s
+#              sudo nft delete rule inet mullvad forward handle <N>
+#
+# NOTE: Rules inserted into the mullvad table will be lost when Mullvad
+# reconnects. Use the systemd service to re-apply them.
 
-define K3S_NETWORKS = {
-    10.42.0.0/16,
-    10.43.0.0/16
-}
-
+# Our own table for intra-cluster traffic marking
 table inet excludeK3s {
     chain excludeOutgoing {
         type route hook output priority 0; policy accept;
-        ip daddr $K3S_NETWORKS ct mark set 0x00000f41 meta mark set 0x6d6f6c65;
+        ip daddr { 10.42.0.0/16, 10.43.0.0/16 } ct mark set 0x00000f41 meta mark set 0x6d6f6c65;
     }
 
     chain allowIncoming {
         type filter hook input priority -100; policy accept;
-        ip saddr $K3S_NETWORKS ct mark set 0x00000f41 meta mark set 0x6d6f6c65;
-    }
-
-    chain allowForward {
-        type filter hook forward priority -100; policy accept;
-        ip saddr $K3S_NETWORKS ct mark set 0x00000f41 meta mark set 0x6d6f6c65;
-        ip daddr $K3S_NETWORKS ct mark set 0x00000f41 meta mark set 0x6d6f6c65;
+        ip saddr { 10.42.0.0/16, 10.43.0.0/16 } ct mark set 0x00000f41 meta mark set 0x6d6f6c65;
     }
 }
