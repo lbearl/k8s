@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://gitea.home.bearl.me/infra/k8s.git
+    repoURL: http://gitea-http.gitea.svc.cluster.local:3000/infra/k8s.git
     targetRevision: main
     path: workloads/gitea
   destination:
