@@ -6,7 +6,7 @@ metadata:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: step-ca-data
+  name: step-ca-db
   namespace: step-ca
 spec:
   accessModes:
@@ -34,24 +34,47 @@ spec:
       labels:
         app: step-ca
     spec:
+      initContainers:
+        - name: init-ca
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              # Build the /home/step directory structure from Secrets.
+              # The PVC only holds the database; keys and config come from Secrets.
+              mkdir -p /home/step/certs /home/step/secrets /home/step/config /home/step/db
+              cp /mnt/certs/root_ca.crt /home/step/certs/root_ca.crt
+              cp /mnt/certs/intermediate_ca.crt /home/step/certs/intermediate_ca.crt
+              cp /mnt/keys/root_ca_key /home/step/secrets/root_ca_key
+              cp /mnt/keys/intermediate_ca_key /home/step/secrets/intermediate_ca_key
+              cp /mnt/keys/password /home/step/secrets/password
+              cp /mnt/config/ca.json /home/step/config/ca.json
+              cp /mnt/config/defaults.json /home/step/config/defaults.json
+              chmod 600 /home/step/secrets/*
+              chown -R 1000:1000 /home/step
+          volumeMounts:
+            - name: home
+              mountPath: /home/step
+            - name: db
+              mountPath: /home/step/db
+            - name: certs
+              mountPath: /mnt/certs
+            - name: keys
+              mountPath: /mnt/keys
+            - name: config
+              mountPath: /mnt/config
       containers:
         - name: step-ca
           image: smallstep/step-ca:0.27.2
           ports:
             - containerPort: 9000
               name: https
-          env:
-            - name: DOCKER_STEPCA_INIT_NAME
-              value: "Home Bearl Me CA"
-            - name: DOCKER_STEPCA_INIT_DNS_NAMES
-              value: "step-ca.home.bearl.me,step-ca.step-ca.svc.cluster.local,127.0.0.1"
-            - name: DOCKER_STEPCA_INIT_REMOTE_MANAGEMENT
-              value: "true"
-            - name: DOCKER_STEPCA_INIT_ACME
-              value: "true"
           volumeMounts:
-            - name: data
+            - name: home
               mountPath: /home/step
+            - name: db
+              mountPath: /home/step/db
           resources:
             requests:
               cpu: 100m
@@ -59,9 +82,21 @@ spec:
             limits:
               memory: 256Mi
       volumes:
-        - name: data
+        - name: home
+          emptyDir: {}
+        - name: db
           persistentVolumeClaim:
-            claimName: step-ca-data
+            claimName: step-ca-db
+        - name: certs
+          secret:
+            secretName: step-ca-certs
+        - name: keys
+          secret:
+            secretName: step-ca-keys
+            defaultMode: 0400
+        - name: config
+          secret:
+            secretName: step-ca-config
 ---
 apiVersion: v1
 kind: Service
