@@ -15,7 +15,10 @@
 # NOTE: Rules inserted into the mullvad table will be lost when Mullvad
 # reconnects. Use the systemd service to re-apply them.
 
-# Our own table for intra-cluster traffic marking
+# Create table first (no-op if it exists), then flush to avoid duplicates
+table inet excludeK3s {}
+flush table inet excludeK3s
+
 table inet excludeK3s {
     chain excludeOutgoing {
         type route hook output priority 0; policy accept;
@@ -25,5 +28,11 @@ table inet excludeK3s {
     chain allowIncoming {
         type filter hook input priority -100; policy accept;
         ip saddr { 10.42.0.0/16, 10.43.0.0/16 } ct mark set 0x00000f41 meta mark set 0x6d6f6c65;
+    }
+
+    chain allowForwarding {
+        type filter hook forward priority -100; policy accept;
+        ip saddr { 10.42.0.0/16, 10.43.0.0/16 } ct mark set 0x00000f41 meta mark set 0x6d6f6c65;
+        ip daddr { 10.42.0.0/16, 10.43.0.0/16 } ct mark set 0x00000f41 meta mark set 0x6d6f6c65;
     }
 }

@@ -3,10 +3,10 @@ Description=Re-apply k3s nftables rules after Mullvad reconnect
 
 [Service]
 Type=oneshot
-# Small delay to let Mullvad finish setting up its nftables rules
-ExecStartPre=/usr/bin/sleep 3
+# Wait for Mullvad to finish recreating its nftables table
+ExecStartPre=/bin/bash -c 'for i in $(seq 1 30); do nft list table inet mullvad &>/dev/null && exit 0; sleep 1; done; exit 1'
 ExecStart=/usr/sbin/nft -f /etc/mullvad-k3s-exclude.rules
-ExecStart=/usr/sbin/nft insert rule inet mullvad forward ip saddr 10.42.0.0/16 accept
 ExecStart=/usr/sbin/nft insert rule inet mullvad forward ip daddr 10.42.0.0/16 accept
+ExecStart=/usr/sbin/nft insert rule inet mullvad forward ip saddr 10.42.0.0/16 accept
 ExecStart=/usr/sbin/nft insert rule inet mullvad input ip saddr 10.42.0.0/16 accept
 ExecStart=/usr/sbin/nft insert rule inet mullvad output ip daddr 10.42.0.0/16 accept
