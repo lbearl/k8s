@@ -52,7 +52,7 @@ spec:
           image: 1password/connect-sync:1.7.3
           ports:
             - containerPort: 11221
-              name: bus
+              name: bus-sync
           env:
             - name: OP_HTTP_PORT
               value: "8081"
