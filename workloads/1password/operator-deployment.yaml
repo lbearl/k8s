@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: onepassword-operator
+  namespace: 1password
+  labels:
+    app: onepassword-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: onepassword-operator
+  template:
+    metadata:
+      labels:
+        app: onepassword-operator
+    spec:
+      serviceAccountName: onepassword-operator
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: operator
+          image: 1password/onepassword-operator:1.8.0
+          args:
+            - --leader-elect
+            - --zap-log-level=info
+          env:
+            - name: OP_CONNECT_HOST
+              value: "http://onepassword-connect.1password.svc.cluster.local:8080"
+            - name: POLLING_INTERVAL
+              value: "600"
+            - name: WATCH_NAMESPACE
+              value: ""
+            - name: OP_CONNECT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: onepassword-token
+                  key: token
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi

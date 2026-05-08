@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: planka
+  namespace: planka
+  annotations:
+    cert-manager.io/cluster-issuer: step-ca-issuer
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - planka.home.bearl.me
+      secretName: planka-tls
+  rules:
+    - host: planka.home.bearl.me
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: planka
+                port:
+                  number: 1337

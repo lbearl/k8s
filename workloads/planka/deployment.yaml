@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: planka
+  namespace: planka
+  labels:
+    app: planka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: planka
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: planka
+    spec:
+      containers:
+        - name: planka
+          image: ghcr.io/plankanban/planka:latest
+          ports:
+            - containerPort: 1337
+              name: http
+          env:
+            - name: BASE_URL
+              value: https://planka.home.bearl.me
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: planka-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: planka-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: planka-secret
+                  key: POSTGRES_DB
+            - name: DATABASE_URL
+              value: postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@planka-postgres:5432/$(POSTGRES_DB)
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: planka-secret
+                  key: SECRET_KEY
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/public/user-avatars
+              subPath: user-avatars
+            - name: uploads
+              mountPath: /app/private/attachments
+              subPath: attachments
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: planka-uploads
