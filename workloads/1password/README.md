@@ -62,7 +62,7 @@ Replace `<your-access-token>` with the token copied in step 1.6.
 
 ## 4. Vault Item Setup (Planka)
 
-Create an item in the **Kubernetes** vault:
+Create an item in the **k8s** vault:
 
 - **Item name:** `planka-secret`
 - **Fields:**
@@ -71,7 +71,7 @@ Create an item in the **Kubernetes** vault:
   - `POSTGRES_PASSWORD` — database password
   - `SECRET_KEY` — Planka session secret (random string, 64+ chars)
 
-The Operator resolves `vaults/Kubernetes/items/planka-secret` and creates a Kubernetes Secret named `planka-secret` in the `planka` namespace with these fields.
+The Operator resolves `vaults/k8s/items/planka-secret` and creates a Kubernetes Secret named `planka-secret` in the `planka` namespace with these fields.
 
 ## Troubleshooting
 
