@@ -48,6 +48,26 @@ spec:
                 secretKeyRef:
                   name: planka-secret
                   key: SECRET_KEY
+            - name: DEFAULT_ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: planka-secret
+                  key: DEFAULT_ADMIN_EMAIL
+            - name: DEFAULT_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: planka-secret
+                  key: DEFAULT_ADMIN_PASSWORD
+            - name: DEFAULT_ADMIN_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: planka-secret
+                  key: DEFAULT_ADMIN_NAME
+            - name: DEFAULT_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: planka-secret
+                  key: DEFAULT_ADMIN_USERNAME
           volumeMounts:
             - name: uploads
               mountPath: /app/public/user-avatars
