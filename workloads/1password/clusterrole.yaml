@@ -11,6 +11,16 @@ rules:
       - get
       - list
       - watch
+      - update
+      - patch
+  - apiGroups:
+      - onepassword.com
+    resources:
+      - onepassworditems/status
+    verbs:
+      - get
+      - update
+      - patch
   - apiGroups:
       - ""
     resources:
