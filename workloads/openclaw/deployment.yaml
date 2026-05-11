@@ -24,7 +24,11 @@ spec:
       containers:
         - name: openclaw
           image: ghcr.io/openclaw/openclaw:latest
-          command: ["node", "dist/index.js", "gateway", "--bind", "lan", "--port", "18789"]
+          imagePullPolicy: IfNotPresent
+          # TEMPORARY: keep container alive for initial setup
+          # After running: kubectl exec -it -n openclaw deploy/openclaw -- openclaw setup
+          # Restore to: ["node", "dist/index.js", "gateway", "--bind", "lan", "--port", "18789"]
+          command: ["sleep", "infinity"]
           ports:
             - containerPort: 18789
               name: gateway

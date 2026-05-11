@@ -6,10 +6,16 @@ After=network-pre.target
 [Service]
 Type=oneshot
 ExecStart=/usr/sbin/nft -f /etc/mullvad-k3s-exclude.rules
+# Pod CIDR (10.42.0.0/16)
 ExecStart=/usr/sbin/nft insert rule inet mullvad forward ip saddr 10.42.0.0/16 accept
 ExecStart=/usr/sbin/nft insert rule inet mullvad forward ip daddr 10.42.0.0/16 accept
 ExecStart=/usr/sbin/nft insert rule inet mullvad input ip saddr 10.42.0.0/16 accept
 ExecStart=/usr/sbin/nft insert rule inet mullvad output ip daddr 10.42.0.0/16 accept
+# Service CIDR (10.43.0.0/16)
+ExecStart=/usr/sbin/nft insert rule inet mullvad forward ip saddr 10.43.0.0/16 accept
+ExecStart=/usr/sbin/nft insert rule inet mullvad forward ip daddr 10.43.0.0/16 accept
+ExecStart=/usr/sbin/nft insert rule inet mullvad input ip saddr 10.43.0.0/16 accept
+ExecStart=/usr/sbin/nft insert rule inet mullvad output ip daddr 10.43.0.0/16 accept
 RemainAfterExit=yes
 
 [Install]

@@ -142,3 +142,65 @@ The Argo CD `stable` install manifest includes NetworkPolicies that restrict pod
 ```bash
 kubectl delete networkpolicies --all -n argocd
 ```
+
+## Troubleshooting
+
+### Symptoms of Mullvad rules being wiped
+
+When Mullvad reconnects (or the system reboots and services start in the wrong order), the inserted rules in `inet mullvad` are lost. This causes:
+
+- **Image pull failures** — containerd cannot reach container registries (ghcr.io, docker.io, etc.) because outbound traffic from the host is blocked by Mullvad's output chain. Pods will show `ErrImagePull` or `ImagePullBackOff`.
+- **cert-manager ACME failures** — If cert-manager needs to reach step-ca via the service CIDR (`10.43.0.0/16`), the request is dropped. Certificates will stay in `Issuing` state and challenges will time out.
+- **Pod-to-service communication breaks** — DNS lookups and service-to-service calls fail with timeouts.
+
+### Quick diagnosis
+
+```bash
+# Check if the rules are present in Mullvad's table
+sudo nft list chain inet mullvad forward | grep -c "10.42.0.0/16"
+# Should return 2 (one for saddr, one for daddr)
+
+sudo nft list chain inet mullvad forward | grep -c "10.43.0.0/16"
+# Should return 2
+
+# Check if the excludeK3s table exists
+sudo nft list table inet excludeK3s
+```
+
+### Quick fix
+
+```bash
+sudo systemctl restart mullvad-k3s-exclude.service
+```
+
+### After fixing rules — recovering stuck workloads
+
+Once the nftables rules are re-applied:
+
+1. **Stuck image pulls** — Delete the pod to force a re-pull:
+   ```bash
+   kubectl delete pod -n <namespace> <pod-name>
+   ```
+
+2. **Stuck certificate issuance** — Delete the failed CertificateRequest and Order to force cert-manager to retry:
+   ```bash
+   kubectl delete certificaterequest -n <namespace> --all
+   kubectl delete order -n <namespace> --all
+   ```
+   Or simply delete and recreate the Certificate resource. cert-manager will re-issue automatically.
+
+3. **Verify recovery**:
+   ```bash
+   kubectl get pods -A | grep -v Running
+   kubectl get certificates -A
+   ```
+
+### Deploying new workloads checklist
+
+When deploying a new workload that pulls images from external registries:
+
+1. Verify Mullvad rules are active: `sudo nft list chain inet mullvad forward | grep "10.42.0.0/16"`
+2. If rules are missing, re-apply: `sudo systemctl restart mullvad-k3s-exclude.service`
+3. Optionally pre-pull the image on the node: `sudo k3s crictl pull <image>`
+4. Consider setting `imagePullPolicy: IfNotPresent` for images that may be pre-loaded or rarely change
+5. After deploying, verify certificates are issued: `kubectl get certificates -n <namespace>`
