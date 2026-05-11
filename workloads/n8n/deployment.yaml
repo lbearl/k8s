@@ -57,6 +57,8 @@ spec:
               value: "https://n8n.home.bearl.me/"
             - name: N8N_COMMUNITY_PACKAGES_ENABLED
               value: "true"
+            - name: N8N_RUNNERS_DISABLED
+              value: "true"
             - name: GENERIC_TIMEZONE
               value: America/Chicago
           volumeMounts:
@@ -65,9 +67,9 @@ spec:
           resources:
             requests:
               cpu: 100m
-              memory: 256Mi
-            limits:
               memory: 512Mi
+            limits:
+              memory: 1Gi
           readinessProbe:
             httpGet:
               path: /healthz
