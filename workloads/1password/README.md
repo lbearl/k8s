@@ -63,7 +63,7 @@ Replace `<your-access-token>` with the token copied in step 1.6.
 ## 4. Vault Item Setup (Planka)
 
 Create an item in the **k8s** vault:
-
+`
 - **Item name:** `planka-secret`
 - **Fields:**
   - `POSTGRES_DB` — database name (e.g. `planka`)
