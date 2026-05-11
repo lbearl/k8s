@@ -204,3 +204,5 @@ When deploying a new workload that pulls images from external registries:
 3. Optionally pre-pull the image on the node: `sudo k3s crictl pull <image>`
 4. Consider setting `imagePullPolicy: IfNotPresent` for images that may be pre-loaded or rarely change
 5. After deploying, verify certificates are issued: `kubectl get certificates -n <namespace>`
+6. **Add the new hostname to CoreDNS** — Edit `workloads/coredns-custom/configmap.yaml` and add an entry mapping the new `*.home.bearl.me` hostname to the ingress-nginx ClusterIP (`10.43.4.106`). Without this, step-ca cannot resolve the hostname for HTTP-01 ACME challenges and TLS certificate issuance will hang.
+7. After updating CoreDNS, restart it: `kubectl rollout restart deployment coredns -n kube-system`
