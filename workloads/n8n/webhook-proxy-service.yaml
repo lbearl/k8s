@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: n8n-webhook-proxy
+  namespace: n8n
+spec:
+  selector:
+    app: n8n-webhook-proxy
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+  type: ClusterIP

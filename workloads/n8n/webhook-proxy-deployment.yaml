@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n-webhook-proxy
+  namespace: n8n
+  labels:
+    app: n8n-webhook-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: n8n-webhook-proxy
+  template:
+    metadata:
+      labels:
+        app: n8n-webhook-proxy
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 8080
+              name: http
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nginx/conf.d
+              readOnly: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+      volumes:
+        - name: config
+          configMap:
+            name: n8n-webhook-proxy-config
+            items:
+              - key: nginx.conf
+                path: default.conf
