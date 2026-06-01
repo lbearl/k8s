@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: marinara-engine
+  namespace: marinara-engine
+  labels:
+    app: marinara-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: marinara-engine
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: marinara-engine
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: marinara-engine
+          image: ghcr.io/pasta-devs/marinara-engine:latest
+          ports:
+            - containerPort: 7860
+              name: http
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: DATA_DIR
+              value: /app/data
+            - name: FILE_STORAGE_DIR
+              value: /app/data/storage
+            - name: MARINARA_DOCKER
+              value: "true"
+            - name: HOST
+              value: "0.0.0.0"
+            - name: PORT
+              value: "7860"
+            - name: TZ
+              value: America/Chicago
+            - name: ALLOW_UNAUTHENTICATED_PRIVATE_NETWORK
+              value: "false"
+            - name: CSRF_TRUSTED_ORIGINS
+              value: "https://ai-chat.home.bearl.me"
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: marinara-engine-secret
+                  key: ENCRYPTION_KEY
+            - name: ADMIN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: marinara-engine-secret
+                  key: ADMIN_SECRET
+            - name: BASIC_AUTH_USER
+              valueFrom:
+                secretKeyRef:
+                  name: marinara-engine-secret
+                  key: BASIC_AUTH_USER
+            - name: BASIC_AUTH_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: marinara-engine-secret
+                  key: BASIC_AUTH_PASS
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 7860
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 7860
+            initialDelaySeconds: 30
+            periodSeconds: 30
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: marinara-engine-data
