@@ -72,17 +72,21 @@ spec:
               memory: 256Mi
             limits:
               memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /
+              port: 7860
+            failureThreshold: 30
+            periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /
               port: 7860
-            initialDelaySeconds: 15
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /
               port: 7860
-            initialDelaySeconds: 30
             periodSeconds: 30
       volumes:
         - name: data
