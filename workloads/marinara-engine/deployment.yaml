@@ -53,6 +53,8 @@ spec:
                 secretKeyRef:
                   name: marinara-engine-secret
                   key: ADMIN_SECRET
+            - name: SIDECAR_RUNTIME_INSTALL_ENABLED
+              value: "true"
             - name: BASIC_AUTH_USER
               valueFrom:
                 secretKeyRef:
