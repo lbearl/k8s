@@ -55,6 +55,10 @@ spec:
                   key: ADMIN_SECRET
             - name: SIDECAR_RUNTIME_INSTALL_ENABLED
               value: "true"
+            - name: IMAGE_LOCAL_URLS_ENABLED
+              value: "true"
+            - name: PROVIDER_LOCAL_URLS_ENABLED
+              value: "true"
             - name: BASIC_AUTH_USER
               valueFrom:
                 secretKeyRef:
