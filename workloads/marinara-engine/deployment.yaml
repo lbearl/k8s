@@ -73,20 +73,26 @@ spec:
             limits:
               memory: 1Gi
           startupProbe:
-            httpGet:
-              path: /
-              port: 7860
+            exec:
+              command:
+                - node
+                - -e
+                - "const h=require('http');h.get('http://127.0.0.1:7860/',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))"
             failureThreshold: 30
             periodSeconds: 10
           readinessProbe:
-            httpGet:
-              path: /
-              port: 7860
+            exec:
+              command:
+                - node
+                - -e
+                - "const h=require('http');h.get('http://127.0.0.1:7860/',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))"
             periodSeconds: 10
           livenessProbe:
-            httpGet:
-              path: /
-              port: 7860
+            exec:
+              command:
+                - node
+                - -e
+                - "const h=require('http');h.get('http://127.0.0.1:7860/',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))"
             periodSeconds: 30
       volumes:
         - name: data
