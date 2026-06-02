@@ -1,0 +1,165 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sd-prompt-proxy
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sd-prompt-proxy-app
+  namespace: sd-prompt-proxy
+data:
+  app.mjs: |
+    import http from "node:http";
+
+    const PORT = process.env.PORT || 8080;
+    const SD_UPSTREAM = process.env.SD_UPSTREAM || "http://192.168.1.88:7860";
+    const LLM_BASE_URL = process.env.LLM_BASE_URL || "http://192.168.1.151:11434/v1";
+    const LLM_API_KEY = process.env.LLM_API_KEY || "unused";
+    const LLM_MODEL = process.env.LLM_MODEL || "gemma4:latest";
+    const MAX_TAGS = parseInt(process.env.MAX_TAGS || "15", 10);
+
+    const SYSTEM_PROMPT = `You are a prompt converter. Convert the input into exactly ${MAX_TAGS} or fewer comma-separated SDXL booru-style tags. Rules:
+    - Output ONLY comma-separated tags, nothing else
+    - No sentences, no duplicates, no near-synonyms
+    - Focus on: subject, appearance, action, setting, lighting, composition, quality
+    - Always start with a quality tag like "masterpiece" or "best quality"
+    - No explanations, no numbering`;
+
+    async function rewritePrompt(prompt) {
+      const res = await fetch(`${LLM_BASE_URL}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${LLM_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: LLM_MODEL,
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: prompt },
+          ],
+          temperature: 0.3,
+          max_tokens: 200,
+        }),
+      });
+      if (!res.ok) {
+        console.error(`LLM error: ${res.status} ${await res.text()}`);
+        return prompt;
+      }
+      const data = await res.json();
+      return data.choices[0].message.content.trim();
+    }
+
+    function proxyRequest(req, res, body) {
+      const url = new URL(req.url, SD_UPSTREAM);
+      const proxyReq = http.request(
+        url,
+        { method: req.method, headers: { ...req.headers, host: url.host } },
+        (proxyRes) => {
+          res.writeHead(proxyRes.statusCode, proxyRes.headers);
+          proxyRes.pipe(res);
+        }
+      );
+      proxyReq.on("error", (e) => {
+        console.error("Upstream error:", e.message);
+        res.writeHead(502);
+        res.end("Bad Gateway");
+      });
+      if (body) proxyReq.write(body);
+      proxyReq.end();
+    }
+
+    const server = http.createServer(async (req, res) => {
+      if (req.method === "POST" && req.url?.includes("/sdapi/v1/txt2img")) {
+        const chunks = [];
+        for await (const chunk of req) chunks.push(chunk);
+        const raw = Buffer.concat(chunks).toString();
+        try {
+          const payload = JSON.parse(raw);
+          console.log(`Original prompt: ${payload.prompt?.substring(0, 100)}...`);
+          if (payload.prompt) {
+            payload.prompt = await rewritePrompt(payload.prompt);
+            console.log(`Rewritten prompt: ${payload.prompt}`);
+          }
+          const body = JSON.stringify(payload);
+          req.headers["content-length"] = Buffer.byteLength(body);
+          proxyRequest(req, res, body);
+        } catch (e) {
+          console.error("Parse error, forwarding as-is:", e.message);
+          proxyRequest(req, res, raw);
+        }
+      } else {
+        const chunks = [];
+        for await (const chunk of req) chunks.push(chunk);
+        const body = chunks.length ? Buffer.concat(chunks) : null;
+        proxyRequest(req, res, body);
+      }
+    });
+
+    server.listen(PORT, () =>
+      console.log(`sd-prompt-proxy listening on :${PORT} → ${SD_UPSTREAM}`)
+    );
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sd-prompt-proxy
+  namespace: sd-prompt-proxy
+  labels:
+    app: sd-prompt-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sd-prompt-proxy
+  template:
+    metadata:
+      labels:
+        app: sd-prompt-proxy
+    spec:
+      containers:
+        - name: sd-prompt-proxy
+          image: node:22-alpine
+          command: ["node", "/app/app.mjs"]
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: SD_UPSTREAM
+              value: "http://192.168.1.88:7860"
+            - name: LLM_BASE_URL
+              value: "http://192.168.1.151:11434/v1"
+            - name: LLM_API_KEY
+              value: "unused"
+            - name: LLM_MODEL
+              value: "gemma4:latest"
+            - name: MAX_TAGS
+              value: "15"
+          volumeMounts:
+            - name: app
+              mountPath: /app
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+      volumes:
+        - name: app
+          configMap:
+            name: sd-prompt-proxy-app
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sd-prompt-proxy
+  namespace: sd-prompt-proxy
+spec:
+  selector:
+    app: sd-prompt-proxy
+  ports:
+    - name: http
+      port: 7860
+      targetPort: http
+  type: ClusterIP
