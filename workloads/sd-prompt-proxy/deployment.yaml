@@ -28,27 +28,31 @@ data:
     - No explanations, no numbering`;
 
     async function rewritePrompt(prompt) {
+      // Preserve LoRA/embedding tags and rewrite only the descriptive part
+      const loraPattern = /<[^>]+>/g;
+      const loras = prompt.match(loraPattern) || [];
+      const descriptive = prompt.replace(loraPattern, "").trim();
+      if (!descriptive) return prompt;
+
       let url, body;
       if (LLM_MODE === "ollama") {
-        // Use native Ollama API with think:false
         url = LLM_BASE_URL.replace("/v1", "") + "/api/chat";
         body = JSON.stringify({
           model: LLM_MODEL,
           messages: [
             { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: prompt },
+            { role: "user", content: descriptive },
           ],
           stream: false,
           think: false,
         });
       } else {
-        // OpenAI-compatible (OpenRouter, etc.)
         url = `${LLM_BASE_URL}/chat/completions`;
         body = JSON.stringify({
           model: LLM_MODEL,
           messages: [
             { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: prompt },
+            { role: "user", content: descriptive },
           ],
           temperature: 0.3,
           max_tokens: 200,
@@ -67,17 +71,22 @@ data:
         return prompt;
       }
       const data = await res.json();
+      let tags;
       if (LLM_MODE === "ollama") {
-        return data.message?.content?.trim() || prompt;
+        tags = data.message?.content?.trim() || descriptive;
+      } else {
+        tags = data.choices[0].message.content?.trim() || descriptive;
       }
-      return data.choices[0].message.content?.trim() || prompt;
+      // Recombine: LoRAs first, then rewritten tags
+      return [...loras, tags].join(", ");
     }
 
-    function proxyRequest(req, res, body) {
+    function proxyRequest(req, res, body, customHeaders) {
       const url = new URL(req.url, SD_UPSTREAM);
+      const headers = customHeaders || { ...req.headers, host: url.host };
       const proxyReq = http.request(
         url,
-        { method: req.method, headers: { ...req.headers, host: url.host } },
+        { method: req.method, headers },
         (proxyRes) => {
           res.writeHead(proxyRes.statusCode, proxyRes.headers);
           proxyRes.pipe(res);
@@ -105,8 +114,9 @@ data:
             console.log(`Rewritten prompt: ${payload.prompt}`);
           }
           const body = JSON.stringify(payload);
-          req.headers["content-length"] = Buffer.byteLength(body);
-          proxyRequest(req, res, body);
+          const fwdHeaders = { ...req.headers, host: new URL(SD_UPSTREAM).host, "content-length": String(Buffer.byteLength(body)) };
+          delete fwdHeaders["transfer-encoding"];
+          proxyRequest(req, res, body, fwdHeaders);
         } catch (e) {
           console.error("Parse error, forwarding as-is:", e.message);
           proxyRequest(req, res, raw);
