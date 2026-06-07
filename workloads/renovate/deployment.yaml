@@ -93,6 +93,8 @@ spec:
                   value: info
                 - name: GIT_SSL_CAINFO
                   value: /certs/root_ca.crt
+                - name: NODE_EXTRA_CA_CERTS
+                  value: /certs/root_ca.crt
               volumeMounts:
                 - name: config
                   mountPath: /config
@@ -111,6 +113,7 @@ spec:
             - name: ca-cert
               configMap:
                 name: step-ca-root-cert
+                defaultMode: 0444
                 items:
                   - key: root_ca.crt
                     path: root_ca.crt
