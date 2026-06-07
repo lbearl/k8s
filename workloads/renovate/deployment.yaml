@@ -21,7 +21,7 @@ data:
     {
       "$schema": "https://docs.renovatebot.com/renovate-schema.json",
       "platform": "gitea",
-      "endpoint": "https://gitea.home.bearl.me/api/v1",
+      "endpoint": "http://gitea-http.gitea.svc.cluster.local:3000/api/v1",
       "autodiscover": true,
       "autodiscoverFilter": ["infra/*"],
       "onboarding": false,
