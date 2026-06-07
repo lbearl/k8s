@@ -9,6 +9,9 @@ Homelab Kubernetes cluster running on k3s. Managed via GitOps with Argo CD.
 | Gitea | https://gitea.home.bearl.me | Git server (hosts this repo) |
 | Argo CD | https://argocd.home.bearl.me | GitOps continuous delivery |
 | Step CA | https://step-ca.home.bearl.me | Internal ACME certificate authority |
+| Open WebUI | https://chat.home.bearl.me | LLM chat interface (Ollama + OpenRouter) |
+| Marinara Engine | https://ai-chat.home.bearl.me | AI chat/roleplay engine (custom fork) |
+| n8n | https://n8n.home.bearl.me | Workflow automation |
 | ingress-nginx | — | Ingress controller (LoadBalancer) |
 | cert-manager | — | Automatic TLS certificate provisioning |
 
