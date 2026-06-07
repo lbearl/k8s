@@ -96,6 +96,14 @@ spec:
                   value: info
                 - name: GIT_SSL_NO_VERIFY
                   value: "true"
+                - name: GIT_AUTHOR_NAME
+                  value: "Renovate Bot"
+                - name: GIT_AUTHOR_EMAIL
+                  value: "renovate@home.bearl.me"
+                - name: GIT_COMMITTER_NAME
+                  value: "Renovate Bot"
+                - name: GIT_COMMITTER_EMAIL
+                  value: "renovate@home.bearl.me"
               volumeMounts:
                 - name: config
                   mountPath: /config
