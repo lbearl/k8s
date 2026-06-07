@@ -65,6 +65,12 @@ spec:
                   - receiver: telegram-webhook
                     matchers:
                       - severity=~"critical|warning"
+          kubeScheduler:
+            enabled: false
+          kubeControllerManager:
+            enabled: false
+          kubeProxy:
+            enabled: false
           nodeExporter:
             enabled: true
           kubeStateMetrics:
