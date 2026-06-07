@@ -152,7 +152,7 @@ spec:
     spec:
       containers:
         - name: sd-prompt-proxy
-          image: node:22-alpine
+          image: node:24-alpine
           command: ["node", "/app/app.mjs"]
           ports:
             - containerPort: 8080
