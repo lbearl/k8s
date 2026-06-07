@@ -3,6 +3,26 @@ kind: Namespace
 metadata:
   name: renovate
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: step-ca-root-cert
+  namespace: renovate
+data:
+  root_ca.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIIBvzCCAWWgAwIBAgIQKBNmeTDVJ+t9EDazJzBRzjAKBggqhkjOPQQDAjA+MRkw
+    FwYDVQQKExBIb21lIEJlYXJsIE1lIENBMSEwHwYDVQQDExhIb21lIEJlYXJsIE1l
+    IFJvb3QgQ0EgMTAeFw0yNTA0MTkxNjE5MDhaFw0zNTA0MTcxNjE5MDhaMD4xGTAX
+    BgNVBAoTEEhvbWUgQmVhcmwgTWUgQ0ExITAfBgNVBAMTGEhvbWUgQmVhcmwgTWUg
+    Um9vdCBDQSAxMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEN9pYOLe7VuSfZFD2
+    gE29hhz0p3OEpmxmLkCfj4ECFK8z0gCDLPCnNq7aJpQF7MiVbeSWsIii+PndYJ/I
+    Fdi4JKNFMEMwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYD
+    VR0OBBYEFFGGIkB1R5RHkL7fgBWcfJ/N6a0FMAoGCCqGSM49BAMCA0gAMEUCIFVz
+    vd9rYD0dAFEyz6/lkkf5V0JhCdjtiG5pwl82HNDTAIEC+xd3vJbfHAo+gCVq4J2F
+    VfjPtV42CRsgz2rBqHk=
+    -----END CERTIFICATE-----
+---
 apiVersion: onepassword.com/v1
 kind: OnePasswordItem
 metadata:
@@ -71,9 +91,13 @@ spec:
                   value: /config/config.json
                 - name: LOG_LEVEL
                   value: info
+                - name: GIT_SSL_CAINFO
+                  value: /certs/root_ca.crt
               volumeMounts:
                 - name: config
                   mountPath: /config
+                - name: ca-cert
+                  mountPath: /certs
               resources:
                 requests:
                   cpu: 100m
@@ -84,3 +108,9 @@ spec:
             - name: config
               configMap:
                 name: renovate-config
+            - name: ca-cert
+              configMap:
+                name: step-ca-root-cert
+                items:
+                  - key: root_ca.crt
+                    path: root_ca.crt
