@@ -42,6 +42,7 @@ data:
       "$schema": "https://docs.renovatebot.com/renovate-schema.json",
       "platform": "gitea",
       "endpoint": "http://gitea-http.gitea.svc.cluster.local:3000/api/v1",
+      "gitUrl": "endpoint",
       "autodiscover": true,
       "autodiscoverFilter": ["infra/*"],
       "onboarding": false,
@@ -91,15 +92,9 @@ spec:
                   value: /config/config.json
                 - name: LOG_LEVEL
                   value: info
-                - name: GIT_SSL_CAINFO
-                  value: /certs/root_ca.crt
-                - name: NODE_EXTRA_CA_CERTS
-                  value: /certs/root_ca.crt
               volumeMounts:
                 - name: config
                   mountPath: /config
-                - name: ca-cert
-                  mountPath: /certs
               resources:
                 requests:
                   cpu: 100m
@@ -110,10 +105,3 @@ spec:
             - name: config
               configMap:
                 name: renovate-config
-            - name: ca-cert
-              configMap:
-                name: step-ca-root-cert
-                defaultMode: 0444
-                items:
-                  - key: root_ca.crt
-                    path: root_ca.crt
