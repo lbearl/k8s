@@ -81,7 +81,7 @@ spec:
           restartPolicy: Never
           containers:
             - name: renovate
-              image: renovate/renovate:39
+              image: renovate/renovate:43
               env:
                 - name: RENOVATE_TOKEN
                   valueFrom:
