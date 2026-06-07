@@ -67,6 +67,11 @@ data:
         {
           "matchUpdateTypes": ["major"],
           "automerge": false
+        },
+        {
+          "matchPackageNames": ["postgres"],
+          "allowedVersions": "16.x",
+          "description": "Pin Postgres to major 16 — major upgrades require dump/restore"
         }
       ]
     }
