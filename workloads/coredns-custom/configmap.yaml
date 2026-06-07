@@ -18,6 +18,7 @@ data:
             10.43.4.106 openclaw.home.bearl.me
             10.43.4.106 ai-chat.home.bearl.me
             10.43.4.106 chat.home.bearl.me
+            10.43.4.106 grafana.home.bearl.me
             fallthrough
         }
     }
