@@ -47,6 +47,13 @@ data:
       "autodiscoverFilter": ["infra/*"],
       "onboarding": false,
       "requireConfig": "optional",
+      "hostRules": [
+        {
+          "matchHost": "github.com",
+          "hostType": "github",
+          "token": "{{ process.env.GITHUB_COM_TOKEN }}"
+        }
+      ],
       "extends": ["config:recommended", "docker:enableMajor"],
       "kubernetes": {
         "fileMatch": ["workloads/.+\\.yaml$", "argocd/.+\\.yaml$"]
@@ -88,6 +95,12 @@ spec:
                     secretKeyRef:
                       name: renovate-secret
                       key: RENOVATE_TOKEN
+                - name: GITHUB_COM_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: renovate-secret
+                      key: GITHUB_COM_TOKEN
+                      optional: true
                 - name: RENOVATE_CONFIG_FILE
                   value: /config/config.json
                 - name: RENOVATE_GIT_URL
