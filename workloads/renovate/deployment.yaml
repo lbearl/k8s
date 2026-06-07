@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: renovate
+---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: renovate-secret
+  namespace: renovate
+spec:
+  itemPath: "vaults/k8s/items/renovate-secret"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: renovate-config
+  namespace: renovate
+data:
+  config.json: |
+    {
+      "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+      "platform": "gitea",
+      "endpoint": "https://gitea.home.bearl.me/api/v1",
+      "autodiscover": true,
+      "autodiscoverFilter": ["infra/*"],
+      "onboarding": false,
+      "requireConfig": "optional",
+      "extends": ["config:recommended", "docker:enableMajor"],
+      "kubernetes": {
+        "fileMatch": ["workloads/.+\\.yaml$", "argocd/.+\\.yaml$"]
+      },
+      "packageRules": [
+        {
+          "matchUpdateTypes": ["patch", "minor"],
+          "automerge": true,
+          "automergeType": "branch"
+        },
+        {
+          "matchUpdateTypes": ["major"],
+          "automerge": false
+        }
+      ]
+    }
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: renovate
+  namespace: renovate
+spec:
+  schedule: "0 */6 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: renovate
+              image: renovate/renovate:39
+              env:
+                - name: RENOVATE_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: renovate-secret
+                      key: RENOVATE_TOKEN
+                - name: RENOVATE_CONFIG_FILE
+                  value: /config/config.json
+                - name: LOG_LEVEL
+                  value: info
+              volumeMounts:
+                - name: config
+                  mountPath: /config
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 512Mi
+                limits:
+                  memory: 1Gi
+          volumes:
+            - name: config
+              configMap:
+                name: renovate-config
