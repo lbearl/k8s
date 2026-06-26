@@ -47,6 +47,7 @@ data:
       "autodiscoverFilter": ["infra/*"],
       "onboarding": false,
       "requireConfig": "optional",
+      "ignoreTests": true,
       "hostRules": [
         {
           "matchHost": "github.com",
