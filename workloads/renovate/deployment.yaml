@@ -62,7 +62,8 @@ data:
         {
           "matchUpdateTypes": ["patch", "minor"],
           "automerge": true,
-          "automergeType": "branch"
+          "automergeType": "pr",
+          "platformAutomerge": true
         },
         {
           "matchUpdateTypes": ["major"],
