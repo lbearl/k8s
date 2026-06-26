@@ -49,7 +49,7 @@ spec:
               cpu: 50m
               memory: 128Mi
         - name: connect-sync
-          image: 1password/connect-sync:1.7.3
+          image: 1password/connect-sync:1.8.2
           ports:
             - containerPort: 11221
               name: bus-sync
