@@ -66,7 +66,7 @@ spec:
               mountPath: /mnt/config
       containers:
         - name: step-ca
-          image: smallstep/step-ca:0.27.2
+          image: smallstep/step-ca:0.30.2
           ports:
             - containerPort: 9000
               name: https
