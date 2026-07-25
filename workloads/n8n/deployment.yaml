@@ -59,6 +59,16 @@ spec:
               value: "true"
             - name: N8N_RUNNERS_DISABLED
               value: "true"
+            - name: GITEA_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-secret
+                  key: GITEA_API_TOKEN
+            - name: N8N_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-secret
+                  key: N8N_API_KEY
             - name: GENERIC_TIMEZONE
               value: America/Chicago
           volumeMounts:
