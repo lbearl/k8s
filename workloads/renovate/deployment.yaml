@@ -55,7 +55,7 @@ data:
           "token": "{{ process.env.GITHUB_COM_TOKEN }}"
         }
       ],
-      "extends": ["config:recommended", "docker:enableMajor"],
+      "extends": ["config:recommended", "docker:enableMajor", "docker:pinDigests"],
       "kubernetes": {
         "fileMatch": ["workloads/.+\\.yaml$", "argocd/.+\\.yaml$"]
       },
@@ -69,6 +69,13 @@ data:
         {
           "matchUpdateTypes": ["major"],
           "automerge": false
+        },
+        {
+          "matchUpdateTypes": ["digest"],
+          "automerge": true,
+          "automergeType": "pr",
+          "platformAutomerge": true,
+          "description": "Auto-merge digest bumps for floating tags (main/latest/staging/alpine) so deployments actually get rebuilt"
         },
         {
           "matchPackageNames": ["postgres"],
