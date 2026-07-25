@@ -14,6 +14,26 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  name: step-ca-root-cert
+  namespace: renovate
+data:
+  root_ca.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIIBvzCCAWWgAwIBAgIQKBNmeTDVJ+t9EDazJzBRzjAKBggqhkjOPQQDAjA+MRkw
+    FwYDVQQKExBIb21lIEJlYXJsIE1lIENBMSEwHwYDVQQDExhIb21lIEJlYXJsIE1l
+    IENBIFJvb3QgQ0EwHhcNMjYwNDI2MTQzMjM5WhcNMzYwNDIzMTQzMjM5WjA+MRkw
+    FwYDVQQKExBIb21lIEJlYXJsIE1lIENBMSEwHwYDVQQDExhIb21lIEJlYXJsIE1l
+    IENBIFJvb3QgQ0EwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAQWa3KeeeyRMMY+
+    wQedIY/scBjgz3tVvGZhDuUNY85vTLA3cfqAfde2NJx7Xh6zNyxgz6Ws73UFb5ND
+    BNYBsBZ3o0UwQzAOBgNVHQ8BAf8EBAMCAQYwEgYDVR0TAQH/BAgwBgEB/wIBATAd
+    BgNVHQ4EFgQUGH4g5ql1ncrdNHpR+b8GJZc8X1UwCgYIKoZIzj0EAwIDSAAwRQIh
+    AK95x3IfOcoNzCgych+d4od1hQbljg72VpbrMWXnr96bAiBgQtgUWwIwk4sPWxoL
+    YpW/8nN7rUbZwjO7d2SskUbMPw==
+    -----END CERTIFICATE-----
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
   name: renovate-config
   namespace: renovate
 data:
@@ -109,9 +129,14 @@ spec:
                   value: "Renovate Bot"
                 - name: GIT_COMMITTER_EMAIL
                   value: "renovate@home.bearl.me"
+                - name: NODE_EXTRA_CA_CERTS
+                  value: /certs/root_ca.crt
               volumeMounts:
                 - name: config
                   mountPath: /config
+                - name: step-ca-root-cert
+                  mountPath: /certs
+                  readOnly: true
               resources:
                 requests:
                   cpu: 100m
@@ -122,3 +147,6 @@ spec:
             - name: config
               configMap:
                 name: renovate-config
+            - name: step-ca-root-cert
+              configMap:
+                name: step-ca-root-cert
