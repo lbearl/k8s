@@ -39,6 +39,16 @@ data:
     from kubernetes import client, config
     from uptime_kuma_api import UptimeKumaApi, MonitorType
 
+    # Some services don't serve anything meaningful at "/" (e.g. API-only
+    # servers). Override the checked path for those here instead of faking
+    # a root response in the service itself.
+    PATH_OVERRIDES = {
+        "step-ca.home.bearl.me": "/health",
+    }
+
+    def monitor_url(host):
+        return f"https://{host}{PATH_OVERRIDES.get(host, '')}"
+
     def desired_hosts():
         config.load_incluster_config()
         networking = client.NetworkingV1Api()
@@ -61,12 +71,16 @@ data:
             existing = {m["name"]: m for m in api.get_monitors()}
 
             for host in sorted(hosts):
+                url = monitor_url(host)
                 if host in existing:
+                    if existing[host].get("url") != url:
+                        api.edit_monitor(existing[host]["id"], url=url)
+                        print(f"updated monitor url: {host} -> {url}")
                     continue
                 api.add_monitor(
                     type=MonitorType.HTTP,
                     name=host,
-                    url=f"https://{host}",
+                    url=url,
                     interval=60,
                     maxretries=2,
                     accepted_statuscodes=["200-299", "300-399", "401", "403"],
