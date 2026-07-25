@@ -64,11 +64,13 @@ spec:
                 secretKeyRef:
                   name: n8n-secret
                   key: GITEA_API_TOKEN
+                  optional: true
             - name: N8N_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: n8n-secret
                   key: N8N_API_KEY
+                  optional: true
             - name: GENERIC_TIMEZONE
               value: America/Chicago
           volumeMounts:
