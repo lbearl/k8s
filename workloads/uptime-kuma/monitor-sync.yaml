@@ -68,7 +68,7 @@ data:
                     name=host,
                     url=f"https://{host}",
                     interval=60,
-                    retries=2,
+                    maxretries=2,
                     accepted_statuscodes=["200-299", "300-399", "401", "403"],
                 )
                 print(f"added monitor: {host}")
