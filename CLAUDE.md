@@ -27,6 +27,8 @@ docs/                 # Setup guides
 5. Add the hostname to `/etc/hosts` on the host machine
 6. Commit and push
 
+No manual step needed for uptime monitoring — a CronJob (`workloads/uptime-kuma/monitor-sync.yaml`) discovers every Ingress hostname in the cluster and reconciles Uptime Kuma's monitors to match, every 15 minutes.
+
 ## Secrets management
 
 Secrets come from 1Password via the 1Password Operator. The pattern:

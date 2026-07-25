@@ -1,0 +1,139 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: uptime-kuma-monitor-sync
+  namespace: uptime-kuma
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: uptime-kuma-monitor-sync
+rules:
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: uptime-kuma-monitor-sync
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: uptime-kuma-monitor-sync
+subjects:
+  - kind: ServiceAccount
+    name: uptime-kuma-monitor-sync
+    namespace: uptime-kuma
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: uptime-kuma-monitor-sync-script
+  namespace: uptime-kuma
+data:
+  sync.py: |
+    import os
+    import sys
+
+    from kubernetes import client, config
+    from uptime_kuma_api import UptimeKumaApi, MonitorType
+
+    def desired_hosts():
+        config.load_incluster_config()
+        networking = client.NetworkingV1Api()
+        hosts = set()
+        for ing in networking.list_ingress_for_all_namespaces().items:
+            for rule in ing.spec.rules or []:
+                if rule.host:
+                    hosts.add(rule.host)
+        return hosts
+
+    def main():
+        hosts = desired_hosts()
+        if not hosts:
+            print("no ingress hosts found, refusing to touch monitors", file=sys.stderr)
+            sys.exit(1)
+
+        api = UptimeKumaApi(os.environ["KUMA_URL"])
+        try:
+            api.login(os.environ["KUMA_USERNAME"], os.environ["KUMA_PASSWORD"])
+            existing = {m["name"]: m for m in api.get_monitors()}
+
+            for host in sorted(hosts):
+                if host in existing:
+                    continue
+                api.add_monitor(
+                    type=MonitorType.HTTP,
+                    name=host,
+                    url=f"https://{host}",
+                    interval=60,
+                    retries=2,
+                    accepted_statuscodes=["200-299", "300-399", "401", "403"],
+                )
+                print(f"added monitor: {host}")
+
+            for name, monitor in existing.items():
+                if name.endswith(".home.bearl.me") and name not in hosts:
+                    api.delete_monitor(monitor["id"])
+                    print(f"removed stale monitor: {name}")
+        finally:
+            api.disconnect()
+
+    if __name__ == "__main__":
+        main()
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: uptime-kuma-monitor-sync
+  namespace: uptime-kuma
+spec:
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: uptime-kuma-monitor-sync
+          restartPolicy: Never
+          containers:
+            - name: sync
+              image: python:3.13-slim
+              imagePullPolicy: Always
+              command:
+                - bash
+                - -c
+                - |
+                  set -euo pipefail
+                  pip install --quiet --no-cache-dir kubernetes uptime-kuma-api
+                  python /scripts/sync.py
+              env:
+                - name: KUMA_URL
+                  value: "http://uptime-kuma.uptime-kuma.svc.cluster.local:3001"
+                - name: KUMA_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: uptime-kuma-secret
+                      key: KUMA_USERNAME
+                - name: KUMA_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: uptime-kuma-secret
+                      key: KUMA_PASSWORD
+              volumeMounts:
+                - name: script
+                  mountPath: /scripts
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  memory: 512Mi
+          volumes:
+            - name: script
+              configMap:
+                name: uptime-kuma-monitor-sync-script

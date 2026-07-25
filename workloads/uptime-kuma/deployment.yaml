@@ -1,3 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: step-ca-root-cert
+  namespace: uptime-kuma
+data:
+  root_ca.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIIBvzCCAWWgAwIBAgIQKBNmeTDVJ+t9EDazJzBRzjAKBggqhkjOPQQDAjA+MRkw
+    FwYDVQQKExBIb21lIEJlYXJsIE1lIENBMSEwHwYDVQQDExhIb21lIEJlYXJsIE1l
+    IFJvb3QgQ0EgMTAeFw0yNTA0MTkxNjE5MDhaFw0zNTA0MTcxNjE5MDhaMD4xGTAX
+    BgNVBAoTEEhvbWUgQmVhcmwgTWUgQ0ExITAfBgNVBAMTGEhvbWUgQmVhcmwgTWUg
+    Um9vdCBDQSAxMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEN9pYOLe7VuSfZFD2
+    gE29hhz0p3OEpmxmLkCfj4ECFK8z0gCDLPCnNq7aJpQF7MiVbeSWsIii+PndYJ/I
+    Fdi4JKNFMEMwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYD
+    VR0OBBYEFFGGIkB1R5RHkL7fgBWcfJ/N6a0FMAoGCCqGSM49BAMCA0gAMEUCIFVz
+    vd9rYD0dAFEyz6/lkkf5V0JhCdjtiG5pwl82HNDTAIEC+xd3vJbfHAo+gCVq4J2F
+    VfjPtV42CRsgz2rBqHk=
+    -----END CERTIFICATE-----
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -20,12 +40,19 @@ spec:
       containers:
         - name: uptime-kuma
           image: louislam/uptime-kuma:1
+          imagePullPolicy: Always
+          env:
+            - name: NODE_EXTRA_CA_CERTS
+              value: /certs/root_ca.crt
           ports:
             - containerPort: 3001
               name: http
           volumeMounts:
             - name: data
               mountPath: /app/data
+            - name: step-ca-root-cert
+              mountPath: /certs
+              readOnly: true
           resources:
             requests:
               cpu: 50m
@@ -48,3 +75,6 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: uptime-kuma-data
+        - name: step-ca-root-cert
+          configMap:
+            name: step-ca-root-cert
