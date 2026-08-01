@@ -36,7 +36,7 @@ spec:
     spec:
       initContainers:
         - name: init-ca
-          image: busybox:1.38
+          image: busybox:1.38@sha256:dc2d74b28e4cf8984fa52af1f39bc7c3d9c73760b41a74d629f5d11b1ab28616
           command:
             - sh
             - -c
@@ -66,7 +66,7 @@ spec:
               mountPath: /mnt/config
       containers:
         - name: step-ca
-          image: smallstep/step-ca:0.30.2
+          image: smallstep/step-ca:0.30.2@sha256:a2b17872915c193259b75a5474c398326f41bd199f0842093e52cf4182bc8270
           ports:
             - containerPort: 9000
               name: https

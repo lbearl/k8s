@@ -19,7 +19,7 @@ spec:
     spec:
       initContainers:
         - name: init-config
-          image: busybox:1.38
+          image: busybox:1.38@sha256:dc2d74b28e4cf8984fa52af1f39bc7c3d9c73760b41a74d629f5d11b1ab28616
           command:
             - sh
             - -c
@@ -34,7 +34,7 @@ spec:
               mountPath: /etc/gitea
       containers:
         - name: gitea
-          image: gitea/gitea:1.27
+          image: gitea/gitea:1.27@sha256:34e3f6b75f5cbb6aebce588037fc5a53c84213e4d4b00da0a8d73e031a558e52
           ports:
             - containerPort: 3000
               name: http
