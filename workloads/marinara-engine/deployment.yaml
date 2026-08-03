@@ -20,7 +20,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: marinara-engine
-          image: gitea.home.bearl.me/infra/marinara-engine:staging
+          image: gitea.home.bearl.me/infra/marinara-engine:staging@sha256:18f9641f6a28de8e8fb8209de387b3a10be8b498f6c712457decbca8be192a0d
           imagePullPolicy: Always
           ports:
             - containerPort: 7860
