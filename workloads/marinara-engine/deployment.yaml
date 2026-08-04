@@ -20,7 +20,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: marinara-engine
-          image: ghcr.io/pasta-devs/marinara-engine:2.4.0@sha256:50fd858088ab308250cf1db31f9f4ec826685fed1d3226853a541f60ac3d0596
+          image: ghcr.io/pasta-devs/marinara-engine:2.4.1@sha256:eed2d2f7db49d5867f30f90d314c2f668f767246cd6e7a48907c3386720be0db
           ports:
             - containerPort: 7860
               name: http
