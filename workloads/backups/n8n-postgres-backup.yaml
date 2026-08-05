@@ -16,7 +16,7 @@ spec:
           restartPolicy: Never
           containers:
             - name: backup
-              image: postgres:16@sha256:33f923b05f64ca54ac4401c01126a6b92afe839a0aa0a52bc5aeb5cc958e5f20
+              image: postgres:16@sha256:f785894b232162fae7af787a62b36bef62fb1c8c310f37a4eabba4c97f2a3279
               command:
                 - bash
                 - -c
