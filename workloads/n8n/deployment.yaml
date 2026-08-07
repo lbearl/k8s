@@ -20,7 +20,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: n8n
-          image: docker.n8n.io/n8nio/n8n@sha256:0e93d6b6a50b3df4b3d6806cf9ba49218266c1f184b1a2ac3d0d232cf0df6819
+          image: docker.n8n.io/n8nio/n8n@sha256:3989d9b8ebb77b4ee8f604519eb73e44f4384bfaa689526e0104eed79a237d30
           ports:
             - containerPort: 5678
               name: http
