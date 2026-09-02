@@ -18,6 +18,22 @@ spec:
         app: marinara-engine
     spec:
       enableServiceLinks: false
+      initContainers:
+        # An unclean shutdown (node reboot, OOM kill) strands the engine's writer
+        # lease at $FILE_STORAGE_DIR/.writer-lease. The restarted container gets the
+        # same pod hostname and the same PID, so the stale lease looks like a live
+        # owner and startup fails with StorageWriterLeaseError, forever.
+        # replicas: 1 + strategy: Recreate guarantee a single writer, so it is safe
+        # to clear the lease unconditionally before the engine starts.
+        - name: clear-writer-lease
+          image: busybox:1.38@sha256:dc2d74b28e4cf8984fa52af1f39bc7c3d9c73760b41a74d629f5d11b1ab28616
+          command:
+            - sh
+            - -c
+            - rm -rf /app/data/storage/.writer-lease
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
       containers:
         - name: marinara-engine
           image: ghcr.io/pasta-devs/marinara-engine:2.4.4@sha256:de94abe62bc6f3c94f7d537893062fff4de042f636cbe703ce51d333ae677791
