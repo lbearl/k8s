@@ -89,7 +89,11 @@ spec:
               cpu: 100m
               memory: 512Mi
             limits:
-              memory: 1Gi
+              # Raised from 1Gi: the container had grown to ~874Mi in normal
+              # use over a few hours, so a single heavy execution could OOM it —
+              # which kills every workflow on the instance, not just the one
+              # that caused it.
+              memory: 2Gi
           readinessProbe:
             httpGet:
               path: /healthz
