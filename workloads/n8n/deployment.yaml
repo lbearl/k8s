@@ -71,6 +71,14 @@ spec:
                   name: n8n-secret
                   key: N8N_API_KEY
                   optional: true
+            - name: JUSTWIN_EMAIL_ENVELOPE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-secret
+                  key: JUSTWIN_EMAIL_ENVELOPE_SECRET
+                  optional: true
+            - name: JUSTWIN_EMAIL_FRESHNESS_WINDOW_SECONDS
+              value: "300"
             - name: GENERIC_TIMEZONE
               value: America/Chicago
           volumeMounts:
