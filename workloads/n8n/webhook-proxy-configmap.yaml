@@ -14,6 +14,10 @@ data:
         auth_basic_user_file /etc/nginx/review-access/htpasswd;
         add_header Cache-Control "no-store" always;
         add_header Referrer-Policy "no-referrer" always;
+        # Forms need same-origin requests for proxy Basic auth. This isolated
+        # host exposes no editor; source content is escaped before rendering.
+        proxy_hide_header Content-Security-Policy;
+        add_header Content-Security-Policy "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; sandbox allow-forms allow-scripts allow-same-origin allow-downloads allow-popups" always;
         proxy_pass http://n8n.n8n.svc.cluster.local:5678;
         proxy_read_timeout 115s;
         proxy_set_header Host $host;
