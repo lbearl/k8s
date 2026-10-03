@@ -1,0 +1,84 @@
+# Control plane n8n talks to when the assistant needs to run code.
+# Never expose via Ingress.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sandbox-api
+  namespace: n8n
+  labels:
+    app: sandbox-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sandbox-api
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: sandbox-api
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: sandbox-api
+          image: ghcr.io/n8n-io/n8n-sandbox-service-api:1.3.4
+          envFrom:
+            - secretRef:
+                name: n8n-sandbox-secret
+          env:
+            - name: SANDBOX_API_GRPC_TLS_CERT_FILE
+              value: /tls/api/grpc-server.crt
+            - name: SANDBOX_API_GRPC_TLS_KEY_FILE
+              value: /tls/api/grpc-server.key
+            - name: SANDBOX_API_GRPC_TLS_CLIENT_CA_FILE
+              value: /tls/api/ca.crt
+            - name: SANDBOX_API_RUNNER_CONTROL_GRPC_TLS_CA_FILE
+              value: /tls/api/ca.crt
+            - name: SANDBOX_API_RUNNER_CONTROL_GRPC_TLS_CERT_FILE
+              value: /tls/api/control-grpc-api-client.crt
+            - name: SANDBOX_API_RUNNER_CONTROL_GRPC_TLS_KEY_FILE
+              value: /tls/api/control-grpc-api-client.key
+            - name: SANDBOX_API_RUNNER_CONTROL_GRPC_TLS_SERVER_NAME
+              value: sandbox-runner-1
+          ports:
+            - containerPort: 8080
+              name: http
+            - containerPort: 9090
+              name: grpc
+          volumeMounts:
+            - name: tls
+              mountPath: /tls
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: tls
+          persistentVolumeClaim:
+            claimName: n8n-sandbox-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sandbox-api
+  namespace: n8n
+spec:
+  selector:
+    app: sandbox-api
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+    - name: grpc
+      port: 9090
+      targetPort: grpc

@@ -1,0 +1,50 @@
+# mTLS material shared by sandbox-api and sandbox-runner-1. Generated once by
+# the Job below (bootstrap-mtls.sh skips generation if the PEM set exists).
+# Service names must stay sandbox-api / sandbox-runner-1 — they are the SANs.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: n8n-sandbox-tls
+  namespace: n8n
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: n8n-sandbox-certs
+  namespace: n8n
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: certs
+          image: ghcr.io/n8n-io/n8n-sandbox-service-api:1.3.4
+          securityContext:
+            runAsUser: 0
+          command: ["sh", "-c"]
+          args:
+            - >
+              bootstrap-mtls.sh --out-dir /tls --api-san sandbox-api
+              --control-san-prefix sandbox-runner --world-readable &&
+              chown -R sandbox-api:sandbox-api /tls/api && chmod -R a+rX /tls
+          env:
+            - name: NUM_RUNNERS
+              value: "1"
+          volumeMounts:
+            - name: tls
+              mountPath: /tls
+      volumes:
+        - name: tls
+          persistentVolumeClaim:
+            claimName: n8n-sandbox-tls
