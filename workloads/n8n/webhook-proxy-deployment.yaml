@@ -23,6 +23,9 @@ spec:
             - containerPort: 8080
               name: http
           volumeMounts:
+            - name: review-access
+              mountPath: /etc/nginx/review-access
+              readOnly: true
             - name: config
               mountPath: /etc/nginx/conf.d
               readOnly: true
@@ -33,6 +36,9 @@ spec:
             limits:
               memory: 64Mi
       volumes:
+        - name: review-access
+          secret:
+            secretName: justwin-review-access
         - name: config
           configMap:
             name: n8n-webhook-proxy-config
