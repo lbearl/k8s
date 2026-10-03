@@ -9,7 +9,7 @@ data:
       listen 8080;
 
       # Protect initial forms and every continuation, not just the first page.
-      location ~ ^/(form/(justwin-intake|justwin-review)/?|form-waiting/[^/]+(/.*)?)$ {
+      location ~ ^/(form/(justwin-intake|justwin-review)(/n8n-execution-status)?/?|form-waiting/[^/]+(/.*)?)$ {
         auth_basic "Justwin review";
         auth_basic_user_file /etc/nginx/review-access/htpasswd;
         add_header Cache-Control "no-store" always;
