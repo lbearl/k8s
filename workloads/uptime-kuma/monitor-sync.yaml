@@ -37,7 +37,7 @@ data:
     import sys
 
     from kubernetes import client, config
-    from uptime_kuma_api import UptimeKumaApi, MonitorType
+    from uptime_kuma_api import UptimeKumaApi, MonitorType, NotificationType
 
     # Some services don't serve anything meaningful at "/" (e.g. API-only
     # servers). Override the checked path for those here instead of faking
@@ -45,6 +45,12 @@ data:
     PATH_OVERRIDES = {
         "step-ca.home.bearl.me": "/health",
     }
+
+    # Alerts go through the existing n8n "AlertManager -> Telegram" workflow
+    # (its Format Alert node understands Kuma's default webhook body), so the
+    # Telegram bot credential stays in n8n.
+    NOTIFICATION_NAME = "n8n Telegram"
+    NOTIFICATION_URL = os.environ["N8N_ALERT_WEBHOOK_URL"]
 
     def monitor_url(host):
         return f"https://{host}{PATH_OVERRIDES.get(host, '')}"
@@ -59,6 +65,24 @@ data:
                     hosts.add(rule.host)
         return hosts
 
+    def ensure_notification(api):
+        # isDefault attaches it to monitors created later. applyExisting
+        # (attach to all current monitors) is only used on first creation so
+        # later syncs don't undo a monitor someone detached on purpose.
+        params = dict(
+            name=NOTIFICATION_NAME,
+            type=NotificationType.WEBHOOK,
+            isDefault=True,
+            webhookURL=NOTIFICATION_URL,
+            webhookContentType="json",
+        )
+        for n in api.get_notifications():
+            if n["name"] == NOTIFICATION_NAME:
+                api.edit_notification(n["id"], **params)
+                return
+        api.add_notification(applyExisting=True, **params)
+        print(f"added notification: {NOTIFICATION_NAME}")
+
     def main():
         hosts = desired_hosts()
         if not hosts:
@@ -68,6 +92,7 @@ data:
         api = UptimeKumaApi(os.environ["KUMA_URL"])
         try:
             api.login(os.environ["KUMA_USERNAME"], os.environ["KUMA_PASSWORD"])
+            ensure_notification(api)
             existing = {m["name"]: m for m in api.get_monitors()}
 
             for host in sorted(hosts):
@@ -136,6 +161,8 @@ spec:
               env:
                 - name: KUMA_URL
                   value: "http://uptime-kuma.uptime-kuma.svc.cluster.local:3001"
+                - name: N8N_ALERT_WEBHOOK_URL
+                  value: "http://n8n.n8n.svc.cluster.local:5678/webhook/alertmanager"
                 - name: KUMA_USERNAME
                   valueFrom:
                     secretKeyRef:
