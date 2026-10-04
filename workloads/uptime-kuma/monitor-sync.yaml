@@ -109,6 +109,8 @@ spec:
   failedJobsHistoryLimit: 3
   jobTemplate:
     spec:
+      backoffLimit: 1
+      ttlSecondsAfterFinished: 3600
       template:
         spec:
           serviceAccountName: uptime-kuma-monitor-sync
@@ -122,7 +124,14 @@ spec:
                 - -c
                 - |
                   set -euo pipefail
-                  pip install --quiet --no-cache-dir kubernetes uptime-kuma-api
+                  # Right after a node reboot CoreDNS may not be answering yet;
+                  # retry the install instead of failing the Job (and alerting).
+                  for i in $(seq 1 10); do
+                    pip install --quiet --no-cache-dir kubernetes uptime-kuma-api && break
+                    [ "$i" = 10 ] && exit 1
+                    echo "pip install failed (attempt $i), retrying in 30s" >&2
+                    sleep 30
+                  done
                   python /scripts/sync.py
               env:
                 - name: KUMA_URL
