@@ -21,7 +21,7 @@ spec:
         fsGroup: 10001
       containers:
         - name: jeeves
-          image: gitea.home.bearl.me/infra/jeeves:0.5.0@sha256:7c501e609c9b7c0c3f1b5a658dd473c0e5b4b25b9b5d468c7477d6ceee881545
+          image: gitea.home.bearl.me/infra/jeeves:0.5.1@sha256:38b381f903a255af29f52801ea523271ba6269aad9532209eeb2df9750fa2c2b
           ports:
             - containerPort: 8080
               name: http
@@ -31,7 +31,7 @@ spec:
             - name: PLANKA_URL
               value: http://planka.planka.svc.cluster.local:1337
             - name: JEEVES_MODE
-              value: dry_run                # Phase 1: every nudge goes to Luke, labelled
+              value: live                   # Phase 2: nudges go to their recipients (unreachable people fall back to Luke, labelled)
             - name: JEEVES_MATERIALIZE
               value: "1"                    # Phase 2: seeded recurring chores become cards (drip-fed, 5/day cap)
             - name: JEEVES_BACKUP_DIR
