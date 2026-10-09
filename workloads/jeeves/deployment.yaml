@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jeeves
+  namespace: jeeves
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate        # single writer: SQLite on a PVC + one Telegram long-poller
+  selector:
+    matchLabels:
+      app: jeeves
+  template:
+    metadata:
+      labels:
+        app: jeeves
+    spec:
+      securityContext:
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: jeeves
+          image: gitea.home.bearl.me/infra/jeeves:0.1.0@sha256:fddba62b64d56839a2e86333662715789c2d4d9f77a1217daf97c2303de8ea26
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: TZ
+              value: America/Chicago
+            - name: PLANKA_URL
+              value: http://planka.planka.svc.cluster.local:1337
+            - name: JEEVES_MODE
+              value: dry_run                # Phase 1: every nudge goes to Luke, labelled
+            - name: JEEVES_MATERIALIZE
+              value: "0"                    # Phase 1: no recurring-chore cards yet (turned on in Phase 2)
+            - name: JEEVES_BACKUP_DIR
+              value: /backups/jeeves
+            - name: PLANKA_API_KEY
+              valueFrom: { secretKeyRef: { name: jeeves-secret, key: PLANKA_API_KEY } }
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom: { secretKeyRef: { name: jeeves-secret, key: TELEGRAM_BOT_TOKEN } }
+            - name: LLM_API_KEY
+              valueFrom: { secretKeyRef: { name: jeeves-secret, key: LLM_API_KEY } }
+            - name: JEEVES_WEBHOOK_SECRET
+              valueFrom: { secretKeyRef: { name: jeeves-secret, key: JEEVES_WEBHOOK_SECRET } }
+          readinessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 15
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 30
+            failureThreshold: 4
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 384Mi }
+          volumeMounts:
+            - { name: data, mountPath: /data }
+            - { name: backups, mountPath: /backups }
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: jeeves-data
+        - name: backups
+          nfs:
+            server: 192.168.1.246
+            path: /volume1/k8s-backups
