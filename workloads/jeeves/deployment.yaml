@@ -33,7 +33,7 @@ spec:
             - name: JEEVES_MODE
               value: dry_run                # Phase 1: every nudge goes to Luke, labelled
             - name: JEEVES_MATERIALIZE
-              value: "0"                    # Phase 1: no recurring-chore cards yet (turned on in Phase 2)
+              value: "1"                    # Phase 2: seeded recurring chores become cards (drip-fed, 5/day cap)
             - name: JEEVES_BACKUP_DIR
               value: /backups/jeeves
             - name: PLANKA_API_KEY
