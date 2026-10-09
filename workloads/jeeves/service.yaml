@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: jeeves
   namespace: jeeves
+  labels:
+    app: jeeves
 spec:
   selector:
     app: jeeves

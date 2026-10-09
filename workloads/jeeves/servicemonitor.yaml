@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: jeeves
+  namespace: jeeves
+spec:
+  selector:
+    matchLabels:
+      app: jeeves
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s

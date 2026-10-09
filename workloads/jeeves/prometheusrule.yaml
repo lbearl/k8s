@@ -1,0 +1,87 @@
+# App-level alerts for Jeeves. Pod-level failures (crash loops, not ready, replica mismatch) are already
+# covered by the generic kube-prometheus-stack rules; these catch a "healthy" pod that is not doing its job.
+# Routed by the existing Alertmanager -> n8n -> Telegram path.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: jeeves
+  namespace: jeeves
+  labels:
+    release: kube-prometheus-stack     # required by the Prometheus ruleSelector
+spec:
+  groups:
+    - name: jeeves
+      rules:
+        - alert: JeevesDown
+          expr: (up{namespace="jeeves", job="jeeves"} == 0) or absent(up{namespace="jeeves", job="jeeves"})
+          for: 5m
+          labels: { severity: critical }
+          annotations:
+            summary: "Jeeves is not being scraped / is down"
+            description: "Prometheus cannot reach Jeeves' /metrics. No nudges, digests or backups are happening."
+        - alert: JeevesJobFailing
+          expr: increase(jeeves_job_failures_total[30m]) > 0
+          labels: { severity: warning }
+          annotations:
+            summary: "Jeeves job '{{ $labels.job }}' failed"
+            description: "A scheduled Jeeves job raised an error in the last 30 minutes. See the pod log."
+        - alert: JeevesBackupStale
+          expr: time() - jeeves_job_last_success_timestamp_seconds{job="backup"} > 26 * 3600
+          for: 10m
+          labels: { severity: critical }
+          annotations:
+            summary: "No successful Jeeves backup in over 26 hours"
+            description: "The nightly SQLite backup to the NAS has not succeeded. The chore catalog is not protected."
+        - alert: JeevesSchedulerStalled
+          expr: time() - jeeves_job_last_success_timestamp_seconds{job=~"nudge|materialize"} > 3600
+          for: 10m
+          labels: { severity: warning }
+          annotations:
+            summary: "Jeeves job '{{ $labels.job }}' has not succeeded for an hour"
+            description: "The scheduler appears stalled; nudges and Planka sync are not running."
+        - alert: JeevesIntakeMissed
+          expr: time() - jeeves_job_last_success_timestamp_seconds{job="intake"} > 26 * 3600
+          for: 30m
+          labels: { severity: warning }
+          annotations:
+            summary: "Jeeves daily intake has not run in over 26 hours"
+            description: "Hand-made Planka cards are not being ingested or dated."
+        - alert: JeevesDecisionServiceFailing
+          expr: |
+            sum(increase(jeeves_llm_calls_total{kind=~"jev.*", ok="false"}[30m]))
+              / clamp_min(sum(increase(jeeves_llm_calls_total{kind=~"jev.*"}[30m])), 1) > 0.5
+            and sum(increase(jeeves_llm_calls_total{kind=~"jev.*"}[30m])) >= 4
+          for: 10m
+          labels: { severity: warning }
+          annotations:
+            summary: "Most Jev decision calls are failing"
+            description: "Jeeves is falling back to asking humans (routing, triage, duplicate checks)."
+        - alert: JeevesChatModelsFailing
+          expr: |
+            sum(increase(jeeves_llm_calls_total{kind=~"chat|polish", ok="false"}[30m]))
+              / clamp_min(sum(increase(jeeves_llm_calls_total{kind=~"chat|polish"}[30m])), 1) > 0.5
+            and sum(increase(jeeves_llm_calls_total{kind=~"chat|polish"}[30m])) >= 4
+          for: 10m
+          labels: { severity: warning }
+          annotations:
+            summary: "Most Jeeves chat-model calls are failing"
+            description: "Free-text conversation and message wording are degraded (check the OpenRouter key and spend cap)."
+        - alert: JeevesTelegramErrors
+          expr: increase(jeeves_telegram_errors_total[15m]) > 3
+          labels: { severity: warning }
+          annotations:
+            summary: "Jeeves is hitting Telegram handler errors"
+            description: "More than 3 errors in 15 minutes."
+        - alert: JeevesSpendHigh
+          expr: sum(increase(jeeves_llm_cost_usd_total[24h])) > 0.5
+          labels: { severity: warning }
+          annotations:
+            summary: "Jeeves model spend over $0.50 in 24h"
+            description: "The monthly cap is $10 (about $0.33/day). Check /stats for what is costing money."
+        - alert: JeevesOverdueBacklog
+          expr: jeeves_open_tasks{state="overdue"} > 10
+          for: 6h
+          labels: { severity: info }
+          annotations:
+            summary: "More than 10 overdue household tasks"
+            description: "The backlog is growing faster than it is being cleared."
