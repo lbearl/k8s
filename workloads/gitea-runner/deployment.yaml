@@ -1,0 +1,52 @@
+# Gitea Actions runner in host mode (jobs run inside this container; no Docker-in-Docker, not privileged).
+# Registered at REPOSITORY level for infra/jeeves, so it only ever executes that repo's workflows.
+# Image source: infra/jeeves ci/runner/.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitea-runner
+  namespace: gitea-runner
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: gitea-runner
+  template:
+    metadata:
+      labels:
+        app: gitea-runner
+    spec:
+      securityContext:
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: runner
+          image: gitea.home.bearl.me/infra/ci-runner:0.1.0@sha256:d44ea27c20da80bd228ad389f0d3fb04a9d21dbeb7c3cb1ecf1dfc04869f75b2
+          env:
+            - name: GITEA_INSTANCE_URL
+              value: http://gitea-http.gitea.svc.cluster.local:3000
+            - name: GITEA_RUNNER_NAME
+              value: jeeves-ci
+            - name: GITEA_RUNNER_LABELS
+              value: ubuntu-latest:host
+            - name: GITEA_RUNNER_REGISTRATION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: gitea-runner
+                  key: GITEA_RUNNER_REGISTRATION_TOKEN
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: "2", memory: 2Gi }
+          volumeMounts:
+            - { name: data, mountPath: /data }
+            - { name: config, mountPath: /config }
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: gitea-runner-data
+        - name: config
+          configMap:
+            name: gitea-runner-config
