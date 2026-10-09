@@ -39,6 +39,13 @@ spec:
           annotations:
             summary: "Jeeves job '{{ $labels.job }}' has not succeeded for an hour"
             description: "The scheduler appears stalled; nudges and Planka sync are not running."
+        - alert: JeevesHASyncStale
+          expr: time() - jeeves_job_last_success_timestamp_seconds{job="ha_sync"} > 2 * 3600
+          for: 15m
+          labels: { severity: warning }
+          annotations:
+            summary: "Jeeves has not synced with Home Assistant for 2 hours"
+            description: "Odometers (and later sensor signals) are stale. Check HA reachability from the cluster, the jeeves-ha token, and that home.bearl.me resolves in-cluster."
         - alert: JeevesIntakeMissed
           expr: time() - jeeves_job_last_success_timestamp_seconds{job="intake"} > 26 * 3600
           for: 30m

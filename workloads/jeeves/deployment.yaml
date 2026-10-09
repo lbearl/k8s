@@ -21,7 +21,7 @@ spec:
         fsGroup: 10001
       containers:
         - name: jeeves
-          image: gitea.home.bearl.me/infra/jeeves:0.5.1@sha256:38b381f903a255af29f52801ea523271ba6269aad9532209eeb2df9750fa2c2b
+          image: gitea.home.bearl.me/infra/jeeves:0.6.0@sha256:874eadfb4c24168b80c1459ede2faacd15c3fd3deaead11f5af1d070b6ce1dc4
           ports:
             - containerPort: 8080
               name: http
@@ -36,6 +36,10 @@ spec:
               value: "1"                    # Phase 2: seeded recurring chores become cards (drip-fed, 5/day cap)
             - name: JEEVES_BACKUP_DIR
               value: /backups/jeeves
+            - name: HA_URL
+              value: https://home.bearl.me:8123   # resolves in-cluster to HA's LAN IP (coredns-custom); local-only read-only user
+            - name: HA_TOKEN
+              valueFrom: { secretKeyRef: { name: jeeves-secret, key: HA_TOKEN } }
             - name: PLANKA_API_KEY
               valueFrom: { secretKeyRef: { name: jeeves-secret, key: PLANKA_API_KEY } }
             - name: TELEGRAM_BOT_TOKEN
