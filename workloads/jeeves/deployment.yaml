@@ -21,7 +21,7 @@ spec:
         fsGroup: 10001
       containers:
         - name: jeeves
-          image: gitea.home.bearl.me/infra/jeeves:0.18.1@sha256:df74fed5212d92e28ce997b41b229cab669f61fc930ca3b19e76ee4d38b3ff77
+          image: gitea.home.bearl.me/infra/jeeves:0.18.2@sha256:a4d1daeb9b056a37b4e264b1527eaceac7bd229181f9218bf83d05f839231e7a
           ports:
             - containerPort: 8080
               name: http

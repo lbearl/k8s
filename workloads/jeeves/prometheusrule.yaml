@@ -26,7 +26,7 @@ spec:
             summary: "Jeeves job '{{ $labels.task }}' failed"
             description: "A scheduled Jeeves job raised an error in the last 30 minutes. See the pod log."
         - alert: JeevesBackupStale
-          expr: time() - jeeves_job_last_success_timestamp_seconds{task="backup"} > 26 * 3600
+          expr: (time() - jeeves_job_last_success_timestamp_seconds{task="backup"} > 26 * 3600) or absent(jeeves_job_last_success_timestamp_seconds{task="backup"})
           for: 10m
           labels: { severity: critical }
           annotations:
