@@ -21,7 +21,7 @@ spec:
         fsGroup: 10001
       containers:
         - name: jeeves
-          image: gitea.home.bearl.me/infra/jeeves:0.23.0@sha256:8db97d5a0c64eef065cabaf77cffdfe667cdd32cf7ce3a475e37d1b58c3f3e62
+          image: gitea.home.bearl.me/infra/jeeves:0.23.1@sha256:c83400eeac41d19ec727b6299b767d5f4dc1341bd9d54e2e344e60742b5d3e64
           ports:
             - containerPort: 8080
               name: http
@@ -51,6 +51,10 @@ spec:
             # because who is speaking is never guessed from the words. Example: "office=luke,bedroom=gwen".
             - name: JEEVES_VOICE_TOKEN
               valueFrom: { secretKeyRef: { name: jeeves-secret, key: voice_token, optional: true } }
+            # Apple Focus sensors (HA companion app). Luke's phone is built in; add Gwen's once she shares hers, e.g.
+            # "gwen=binary_sensor.gwens_iphone_focus". Messages are held while the recipient is asleep (see docs/RUNBOOK.md).
+            - name: JEEVES_FOCUS_ENTITIES
+              value: ""
             - name: JEEVES_VOICE_PEOPLE
               value: ""
             - name: PLANKA_API_KEY
