@@ -21,7 +21,7 @@ spec:
         fsGroup: 10001
       containers:
         - name: jeeves
-          image: gitea.home.bearl.me/infra/jeeves:0.16.0@sha256:4d78afe5eb0c8c29191062f252e6011011cf39615d45ec5ed84ad4a7241547ee
+          image: gitea.home.bearl.me/infra/jeeves:0.16.1@sha256:25d4624fa39d710639840229f43c5cba1963477bdeae09afbf85b1d30bfc0ab5
           ports:
             - containerPort: 8080
               name: http
@@ -40,8 +40,13 @@ spec:
               value: https://home.bearl.me:8123   # resolves in-cluster to HA's LAN IP (coredns-custom); local-only read-only user
             - name: HA_TOKEN
               valueFrom: { secretKeyRef: { name: jeeves-secret, key: HA_TOKEN } }
-            - name: JEEVES_CALENDARS               # 'luke=<private iCal url>,gwen=...,household=...'; optional: no feeds = calendars off
-              valueFrom: { secretKeyRef: { name: jeeves-secret, key: JEEVES_CALENDARS, optional: true } }
+            # Private/public iCal addresses (read-only). Optional: a missing key just means that calendar is off.
+            - name: JEEVES_CAL_LUKE
+              valueFrom: { secretKeyRef: { name: jeeves-secret, key: luke, optional: true } }
+            - name: JEEVES_CAL_HOUSEHOLD          # the partly shared G+L calendar ('+' is not allowed in secret keys)
+              valueFrom: { secretKeyRef: { name: jeeves-secret, key: G-L_Calendar, optional: true } }
+            - name: JEEVES_CAL_GWEN               # Gwen's public view
+              valueFrom: { secretKeyRef: { name: jeeves-secret, key: gwen_public, optional: true } }
             - name: PLANKA_API_KEY
               valueFrom: { secretKeyRef: { name: jeeves-secret, key: PLANKA_API_KEY } }
             - name: TELEGRAM_BOT_TOKEN
