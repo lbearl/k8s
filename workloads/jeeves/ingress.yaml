@@ -1,0 +1,29 @@
+# The Jeeves settings page. LAN only (this ingress class is not exposed beyond the house).
+# The app itself serves ONLY its UI paths on this hostname (/metrics, /signal, /healthz return 404 here), and sign-in is a
+# one-time link sent to the person's own Telegram, so there is no password to guess.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jeeves
+  namespace: jeeves
+  annotations:
+    cert-manager.io/cluster-issuer: step-ca-issuer
+    nginx.ingress.kubernetes.io/limit-rps: "10"            # a household page does not need more; blunts brute-force and link spam
+    nginx.ingress.kubernetes.io/proxy-body-size: "64k"     # forms are tiny
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - jeeves.home.bearl.me
+      secretName: jeeves-tls
+  rules:
+    - host: jeeves.home.bearl.me
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: jeeves
+                port:
+                  number: 8080
