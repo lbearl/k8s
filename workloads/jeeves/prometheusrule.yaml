@@ -33,7 +33,7 @@ spec:
             summary: "No successful Jeeves backup in over 26 hours"
             description: "The nightly SQLite backup to the NAS has not succeeded. The chore catalog is not protected."
         - alert: JeevesSchedulerStalled
-          expr: time() - jeeves_job_last_success_timestamp_seconds{job=~"nudge|materialize|signals"} > 3600
+          expr: time() - jeeves_job_last_success_timestamp_seconds{job=~"nudge|materialize|signals|calendar"} > 3600
           for: 10m
           labels: { severity: warning }
           annotations:
