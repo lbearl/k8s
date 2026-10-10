@@ -21,7 +21,7 @@ spec:
         fsGroup: 10001
       containers:
         - name: jeeves
-          image: gitea.home.bearl.me/infra/jeeves:0.20.0@sha256:f52c7c30eab18bd049e8e256c738874a614db56eaff070d99c993381f0024d4b
+          image: gitea.home.bearl.me/infra/jeeves:0.21.0@sha256:e6381d07a542ef002aabb2556e4a3f6f6b7e85b01e59442884a678d3f23f9152
           ports:
             - containerPort: 8080
               name: http
@@ -47,6 +47,12 @@ spec:
               valueFrom: { secretKeyRef: { name: jeeves-secret, key: G-L_Calendar, optional: true } }
             - name: JEEVES_CAL_GWEN               # Gwen's public view
               valueFrom: { secretKeyRef: { name: jeeves-secret, key: gwen_public, optional: true } }
+            # Home Assistant voice ("Jeeves, what is on my list?"): off unless the token exists. Rooms are mapped to people here,
+            # because who is speaking is never guessed from the words. Example: "office=luke,bedroom=gwen".
+            - name: JEEVES_VOICE_TOKEN
+              valueFrom: { secretKeyRef: { name: jeeves-secret, key: voice_token, optional: true } }
+            - name: JEEVES_VOICE_PEOPLE
+              value: ""
             - name: PLANKA_API_KEY
               valueFrom: { secretKeyRef: { name: jeeves-secret, key: PLANKA_API_KEY } }
             - name: TELEGRAM_BOT_TOKEN
