@@ -25,6 +25,13 @@ spec:
           annotations:
             summary: "Jeeves job '{{ $labels.task }}' failed"
             description: "A scheduled Jeeves job raised an error in the last 30 minutes. See the pod log."
+        - alert: JeevesHAStreamDown
+          expr: jeeves_ha_stream_connected == 0 and on() jeeves_ha_stream_drops_total > 0
+          for: 15m
+          labels: { severity: warning }
+          annotations:
+            summary: "Jeeves has lost its live Home Assistant feed"
+            description: "The WebSocket stream has been down for 15 minutes. Sensor rules fall back to 60-second REST polling, so nothing is missed, but check HA reachability, the token and the cert."
         - alert: JeevesBackupStale
           expr: (time() - jeeves_job_last_success_timestamp_seconds{task="backup"} > 26 * 3600) or absent(jeeves_job_last_success_timestamp_seconds{task="backup"})
           for: 10m
