@@ -20,7 +20,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: operator
-          image: 1password/onepassword-operator:1.12.0@sha256:a691d5007ae9cfdd221eefca3a60ac3bad0e30dad9fe853986f1db5d6ec25d2f
+          image: 1password/onepassword-operator:1.12.1@sha256:99329ca86f28c3e79ac88766910433bb732bb50be506863c532c16bb29ff93c9
           args:
             - --leader-elect
             - --zap-log-level=info
