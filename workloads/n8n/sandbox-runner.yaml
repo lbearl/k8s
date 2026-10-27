@@ -22,7 +22,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: runner
-          image: ghcr.io/n8n-io/n8n-sandbox-service-runner-dind:1.11.0@sha256:69320f55ae52781b66efe3e34b1ad814a63fae4d3f85cb4aabcee1f650d20636
+          image: ghcr.io/n8n-io/n8n-sandbox-service-runner-dind:1.12.0@sha256:2bed57501269157325a50cdb99400d85225ca29adbe4bc73bf0a699e97c77f02
           securityContext:
             privileged: true
           envFrom:
