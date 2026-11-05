@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: planka
-          image: ghcr.io/plankanban/planka:latest@sha256:13a3c60cb2303252fe2b9d412ae777c7f9c530c91492f50f3b505dc6040b9bc3
+          image: ghcr.io/plankanban/planka:latest@sha256:f767ab97b878265ea1fff826867718d6ffa95dac04cd979fb5db82489806fb51
           ports:
             - containerPort: 1337
               name: http
