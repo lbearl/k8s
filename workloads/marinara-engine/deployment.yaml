@@ -36,7 +36,7 @@ spec:
               mountPath: /app/data
       containers:
         - name: marinara-engine
-          image: ghcr.io/pasta-devs/marinara-engine:2.5.1@sha256:2d17e6a8fe1f2eefc4f61b6af2a62d51cd8f4746b35b8b068df71a2259aae663
+          image: ghcr.io/pasta-devs/marinara-engine:2.5.2@sha256:a3b30f9247eefc1ac41f8823812d472765ecb4465903a18dc9e5a6bc4bd79394
           ports:
             - containerPort: 7860
               name: http
