@@ -29,7 +29,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: certs
-          image: ghcr.io/n8n-io/n8n-sandbox-service-api:1.14.0@sha256:bca5e76d828306c0e319e946cfd0f4ff22941ce9e61bb5fcc118a1cce59c180d
+          image: ghcr.io/n8n-io/n8n-sandbox-service-api:1.15.0@sha256:6c8f4545ef77261ec0351e926b7197b003d330c443c0a7afd46063bdd397f504
           securityContext:
             runAsUser: 0
           command: ["sh", "-c"]
