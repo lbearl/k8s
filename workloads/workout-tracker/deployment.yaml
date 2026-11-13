@@ -18,10 +18,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: workout-tracker
-          # Pin a digest after the first CI build (Renovate keeps it current):
-          #   ghcr.io/lbearl/workout-tracker:main@sha256:...
-          image: ghcr.io/lbearl/workout-tracker:main
-          imagePullPolicy: Always
+          image: ghcr.io/lbearl/workout-tracker:main@sha256:9e8942104a61d2f84af79035d82cf1f6424af61a41af3989f145cfd2566e897c
           ports:
             - containerPort: 8080
               name: http
