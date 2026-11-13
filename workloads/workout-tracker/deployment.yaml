@@ -20,7 +20,7 @@ spec:
         - name: ghcr-pull-secret
       containers:
         - name: workout-tracker
-          image: ghcr.io/lbearl/workout-tracker:main@sha256:9e8942104a61d2f84af79035d82cf1f6424af61a41af3989f145cfd2566e897c
+          image: ghcr.io/lbearl/workout-tracker:main@sha256:9a498659ffbfdde16f0911653fa5167a6f11c7c1b0b8f67c6b53deb96367d771
           ports:
             - containerPort: 8080
               name: http
