@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workout-tracker
+  namespace: workout-tracker
+  labels:
+    app: workout-tracker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: workout-tracker
+  template:
+    metadata:
+      labels:
+        app: workout-tracker
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: workout-tracker
+          # Pin a digest after the first CI build (Renovate keeps it current):
+          #   ghcr.io/lbearl/workout-tracker:main@sha256:...
+          image: ghcr.io/lbearl/workout-tracker:main
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: TZ_NAME
+              value: America/Chicago
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: workout-tracker-secret
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: workout-tracker-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: workout-tracker-secret
+                  key: POSTGRES_PASSWORD
+            - name: DATABASE_URL
+              value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@workout-tracker-postgres:5432/$(POSTGRES_DB)
+            - name: API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: workout-tracker-secret
+                  key: API_TOKEN
+          resources:
+            requests:
+              cpu: 50m
+              memory: 96Mi
+            limits:
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 30
+            failureThreshold: 3

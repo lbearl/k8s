@@ -12,6 +12,7 @@ Homelab Kubernetes cluster running on k3s. Managed via GitOps with Argo CD.
 | Open WebUI | https://chat.home.bearl.me | LLM chat interface (Ollama + OpenRouter) |
 | Marinara Engine | https://ai-chat.home.bearl.me | AI chat/roleplay engine (custom fork) |
 | n8n | https://n8n.home.bearl.me | Workflow automation |
+| Workout tracker | https://workouts.home.bearl.me | X3 training log + Apple Health sync ([source](https://github.com/lbearl/workout-tracker)) |
 | ingress-nginx | — | Ingress controller (LoadBalancer) |
 | cert-manager | — | Automatic TLS certificate provisioning |
 
