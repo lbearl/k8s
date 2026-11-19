@@ -22,7 +22,7 @@ spec:
       enableServiceLinks: false
       containers:
         - name: sandbox-api
-          image: ghcr.io/n8n-io/n8n-sandbox-service-api:1.15.0@sha256:6c8f4545ef77261ec0351e926b7197b003d330c443c0a7afd46063bdd397f504
+          image: ghcr.io/n8n-io/n8n-sandbox-service-api:1.16.0@sha256:334724118cbc5235a73a69efa71cde50f85d1ac3b72c16785dd930d500d00a32
           envFrom:
             - secretRef:
                 name: n8n-sandbox-secret
