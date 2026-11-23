@@ -102,6 +102,7 @@ spec:
                 - "const h=require('http');h.get('http://127.0.0.1:7860/',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))"
             failureThreshold: 30
             periodSeconds: 10
+            timeoutSeconds: 10
           readinessProbe:
             exec:
               command:
@@ -109,6 +110,7 @@ spec:
                 - -e
                 - "const h=require('http');h.get('http://127.0.0.1:7860/',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))"
             periodSeconds: 10
+            timeoutSeconds: 10
           livenessProbe:
             exec:
               command:
@@ -116,6 +118,7 @@ spec:
                 - -e
                 - "const h=require('http');h.get('http://127.0.0.1:7860/',r=>{process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))"
             periodSeconds: 30
+            timeoutSeconds: 10
       volumes:
         - name: data
           persistentVolumeClaim:
